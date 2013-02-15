@@ -22,7 +22,7 @@ def gaussian_smooth2(image, sigma):
 
   # create filter
   filter = cv2.getGaussianKernel(filter_length, sigma)
-  # apply filter
+  # apply the same filter on both the X and Y axis
   result = cv2.sepFilter2D(image, -1, filter, filter)
 
   return result
@@ -40,5 +40,5 @@ if __name__ == '__main__':
   smoothed_image = gaussian_smooth2(image, 2)
 
   # show the smoothed image, and wait for a key to be pressed
-  cv2.imshow('smoothed_image',smoothed_image)
+  cv2.imshow('smoothed using OpenCV',smoothed_image)
   cv2.waitKey(0)

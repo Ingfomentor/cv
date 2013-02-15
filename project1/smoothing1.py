@@ -24,20 +24,35 @@ def gaussian_filter(sigma, filter_length=None):
   # make sure sigma is a float
   sigma = float(sigma)
     
-  # create the filter
-  filter = np.zeros(filter_length)
-  edge = int(math.floor(filter_length / 2)) # e.g. 1
-  filter[edge] = gaussian_value(0,sigma)    # init center = [ 0 c 0 ]
-  for x in range(-edge, 0):                 # range = -1
-    value = gaussian_value(x,sigma)
-    filter[edge+x] = value                  # [v c 0]
-    filter[edge-x] = value                  # [v c v]
-    
+  # create the filter: it should be an array containing Gaussian values. the
+  # center of the (odd-length) array is the Gaussian value corresponding to zero
+  # on both sides then are decreasing and increasing values.
+  # first create an array with the filter points
+  # e.g. : [ ... -3 -2 -1 0 1 2 3 ... ]
+  filter_points = np.array(range(filter_length/2+1))
+  filter_points = np.concatenate((filter_points[::-1]*-1, filter_points[1:]))
+  # then turn it in an array of Gaussian values using higher order function
+  gaussian_function            = create_gaussian_value_function(sigma)
+  vectorized_gaussian_function = np.vectorize(gaussian_function)
+  filter                       = vectorized_gaussian_function(filter_points)
+  
   # make sure that sum = 1
   filter = filter / filter.sum()
 
   # return the filter
   return filter
+
+def create_gaussian_value_function(sigma):
+  '''
+  Creates a higher order function to compute a Gaussian value with a fixed
+  variance/stdev
+  @param  sigma variance
+  @return function that computes a Gaussian value given a reference point
+  '''
+  def wrapper(x):
+    return gaussian_value(x, sigma)
+  
+  return wrapper
 
 def gaussian_value(x, sigma):
   '''
@@ -89,16 +104,28 @@ def smooth(image, filter):
   @param  filter  A 1-D numpy array with encoded filter
   @return smoothed image as 2D array
   '''
-  result = np.zeros_like(image)
+
+  # add border of filter_length/2 rows/columns to image
+  # this avoids border artifacts
+  border = filter.shape[0]/2
+  image  = add_border(image, 'X', border)
+  image  = add_border(image, 'Y', border)
 
   # smooth rows
   for row in range(image.shape[0]):
-    result[row,:] = np.convolve(image[row,:], filter, 'same')
+    image[row,:] = np.convolve(image[row,:], filter, 'same')
   # smooth columns
   for column in range(image.shape[1]):
-    result[:,column] = np.convolve(image[:,column], filter, 'same')
+    image[:,column] = np.convolve(image[:,column], filter, 'same')
 
-  return result
+  # return image without border
+  return image[border:-border,border:-border]
+
+def add_border(array, xy, amount):
+  repeats = np.ones(array.shape[0 if xy == 'X' else 1], dtype=int)
+  repeats[0]  = amount + 1
+  repeats[-1] = amount + 1
+  return np.repeat(array, repeats, axis=0 if xy == 'X' else 1)
 
 # this part of the code is only executed if the file is run stand-alone
 if __name__ == '__main__':
@@ -119,5 +146,5 @@ if __name__ == '__main__':
   smoothed_img = gaussian_smooth1(img, 2)
     
   # show the smoothed image, and wait for a key to be pressed
-  cv2.imshow('smoothed_img',smoothed_img)
+  cv2.imshow('smoothed using python ',smoothed_img)
   cv2.waitKey(0)
