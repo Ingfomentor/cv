@@ -5,17 +5,30 @@ Cell counting.
 import cv2
 import cv2.cv as cv
 import numpy as np
-import matplotlib.pyplot as plt
-import math
+
+# (initial) parameters for the algoritms
+highThreshold = 100
+lowThreshold  = highThreshold / 2
+dp            = 1
+minDist       = 20
+param1        = highThreshold  # reuse the same ;-)
+param2        = 20
+minRadius     = 30
+maxRadius     = 65
+midChannelLow = 107
 
 # some global config
-showSteps = True
+wndName   = "Project 2 : Segmentation"
+showSteps = False
+
+paramsChanged = True   # triggers initial detection
 
 def detect(img):
     '''
     Do the detection.
     '''
-    global showSteps
+    global showSteps, highThreshold, lowThreshold, dp, minDist, param1, param2,\
+           minRadius, maxRadius, midChannelLow, wndName
 
     # create a gray scale version of the image, with as type an unsigned 8bit 
     # integer
@@ -31,32 +44,16 @@ def detect(img):
     # highThreshold = 1.33 * median
     # lowThreshold  = 0.66 * median
 
-    # manual guessing high + reusing same ratio as Hough transform ;-)
-    highThreshold = 100
-    lowThreshold  = highThreshold / 2
-
-    print "*** using canny thresholds:", lowThreshold, highThreshold
-    
     cv2.Canny(img_g, lowThreshold, highThreshold, edges)
 
     # show the results of canny
     if showSteps:
       canny_result = np.copy(img_g)
       canny_result[edges.astype(np.bool)] = 0
-      cv2.imshow('img',canny_result)
+      cv2.imshow(wndName,canny_result)
       cv2.waitKey(0)
 
     # 2. do Hough transform on the gray scale image
-    dp        = 1
-    minDist   = 20
-    param1    = highThreshold  # reuse the same ;-)
-    param2    = 20
-    minRadius = 30
-    maxRadius = 65
-
-    print "*** using Hough parameters: ", dp, minDist, param1, param2, \
-                                           minRadius, maxRadius
-
     circles = cv2.HoughCircles(img_g, cv.CV_HOUGH_GRADIENT, dp=dp,
                                minDist=minDist, param1=param1, param2=param2,
                                minRadius=minRadius, maxRadius=maxRadius)
@@ -81,10 +78,6 @@ def detect(img):
       showCircles(img, circles, [ str(features[i,:]) for i in range(nbCircles)])
 
     # 3.c remove circles based on the features
-    midChannelLow = 145
-
-    print "*** using low threshold on mid channel of ", midChannelLow
-
     selectedCircles = np.zeros( (nbCircles), np.bool)
     for i in range(nbCircles):
         if midChannelLow < features[i,1]:
@@ -110,24 +103,17 @@ def getAverageColorInCircle(img, cx, cy, radius):
 
     # trim the mask, in case it stretches beyond the img boundaries
     trimB = 0; trimT = 0; trimL = 0; trimR = 0;
-    # bottom
-    if cy + radius > height:
-      trimT = cy + radius - height
-      mask = mask[:-trimT,:]
-    # top
-    if cy - radius < 0:
-      trimB = radius - cy
-      mask = mask[trimB:,:]
-    # right
-    if cx + radius > width:
-      trimR = cx + radius - width
-      mask = mask[:,:-trimR]
-    # left
-    if cx - radius < 0:
-      trimL = radius - cx
-      mask = mask[:,trimL:]
 
-    # trim the part of the image
+    if cy + radius > height:      # top
+      trimT = cy + radius - height;      mask = mask[:-trimT,:]
+    if cy - radius < 0:           # bottom
+      trimB = radius - cy;               mask = mask[trimB:,:]
+    if cx + radius > width:       # right
+      trimR = cx + radius - width;       mask = mask[:,:-trimR]
+    if cx - radius < 0:           # left
+      trimL = radius - cx;               mask = mask[:,trimL:]
+
+    # also trim the part of the image
     bottom = cy-radius+trimB; top   = cy+radius-trimT;
     left   = cx-radius+trimL; right = cx+radius-trimR;
     for c in range(channels):
@@ -145,7 +131,9 @@ def showCircles(img, circles, text=None):
     @param text:    optional parameter, list of strings to be plotted in the
                     circles
     '''
-    # make a copy of img
+    global wndName
+
+    # make a copy of img (to not pass-back changes)
     img = np.copy(img)
     # draw the circles
     nbCircles = circles.shape[0]
@@ -158,22 +146,46 @@ def showCircles(img, circles, text=None):
             cv2.putText(img, text[i], (int(circles[i,0]), int(circles[i,1])),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, cv2.cv.CV_RGB(0, 0,255))
     # show the result
-    cv2.imshow('img',img)
-    cv2.waitKey(0)    
+    cv2.imshow(wndName,img)
+
+def refresh(value):
+    global paramsChanged, highThreshold, lowThreshold, dp, minDist, param1, \
+           param2, minRadius, maxRadius, midChannelLow, wndName
+  
+    highThreshold = cv.GetTrackbarPos("Canny High", wndName)
+    lowThreshold  = highThreshold / 2
+    minDist       = cv.GetTrackbarPos("Min Dist", wndName)
+    param1        = highThreshold  # reuse the same ;-)
+    param2        = cv.GetTrackbarPos("Hough param2", wndName)
+    minRadius     = cv.GetTrackbarPos("Min Radius", wndName)
+    maxRadius     = cv.GetTrackbarPos("Max Radius", wndName)
+    midChannelLow = cv.GetTrackbarPos("Mid Channel Low", wndName)
+
+    paramsChanged = True
 
 if __name__ == '__main__':
+    cv.NamedWindow(wndName, cv.CV_WINDOW_AUTOSIZE)
+    
+    cv.CreateTrackbar("Canny High",      wndName, highThreshold, 200, refresh)
+    cv.CreateTrackbar("Min Dist",        wndName, minDist,       100, refresh)
+    cv.CreateTrackbar("Hough param2",    wndName, param2,        100, refresh)
+    cv.CreateTrackbar("Min Radius",      wndName, minRadius,     100, refresh)
+    cv.CreateTrackbar("Max Radius",      wndName, maxRadius,     100, refresh)    
+    cv.CreateTrackbar("Mid Channel Low", wndName, midChannelLow, 255, refresh)    
+    
     # read an image
     img = cv2.imread('normal.jpg')
-    
-    # print the dimension of the image
-    print img.shape
-    
-    # show the image
-    cv2.imshow('img',img)
-    cv2.waitKey(0)
-    
-    # do detection
-    circles = detect(img)
-    
-    # print result
-    print "We counted " + str(circles.shape[0]) + " cells."
+        
+    # add delay of 100ms to slow the busy loop and check for keypress = exit
+    while cv2.waitKey(100) == -1:
+      if paramsChanged:
+        # reset flag
+        paramsChanged = False
+        print "*** using canny thresholds:", lowThreshold, highThreshold
+        print "*** using Hough parameters: ", dp, minDist, param1, param2, \
+                                              minRadius, maxRadius
+        print "*** using low threshold on mid channel: ", midChannelLow
+        # do detection
+        circles = detect(img)
+        # print result
+        print "We counted " + str(circles.shape[0]) + " cells."
