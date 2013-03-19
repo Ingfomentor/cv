@@ -15,8 +15,8 @@ param1         = highThreshold  # reuse the same ;-)
 param2         = 20
 minRadius      = 30
 maxRadius      = 65
-midChannelHigh = 196
-midChannelLow  = 110
+channelsHigh   = np.array([50, 50, 50])
+channelsLow    = np.array([ 0,  0,  0])
 
 # some global config
 wndName   = "Project 2 : Segmentation"
@@ -29,7 +29,7 @@ def detect(img):
     Do the detection.
     '''
     global showSteps, highThreshold, lowThreshold, dp, minDist, param1, param2,\
-           minRadius, maxRadius, midChannelHigh, midChannelLow, wndName
+           minRadius, maxRadius, channelsHigh, channelsLow, wndName
 
     # create a gray scale version of the image, with as type an unsigned 8bit 
     # integer
@@ -83,7 +83,8 @@ def detect(img):
     # 3.c remove circles based on the features
     selectedCircles = np.zeros( (nbCircles), np.bool)
     for i in range(nbCircles):
-        if midChannelLow < features[i,1] < midChannelHigh:
+        if ((channelsLow  < features[i,:]).all() and 
+            (channelsHigh > features[i,:]).all()):
            selectedCircles[i] = 1
     circles = circles[selectedCircles]
 
@@ -96,6 +97,10 @@ def getAverageColorInCircle(img, cx, cy, radius):
     Get the average color of img inside the circle located at (cx,cy) with 
     radius.
     '''
+
+    # convert img from BGR to HSV
+    img = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
+
     height, width, channels = img.shape
     C = np.zeros((3))
 
@@ -154,8 +159,13 @@ def showCircles(img, circles, text=None):
     cv2.imshow(wndName,img)
 
 def refresh(value):
+    '''
+    Callback function for all trackbars. The value that is passed is not used,
+    because we don't known which trackbar it comes from. We simply update all
+    parameters.
+    '''
     global paramsChanged, highThreshold, lowThreshold, dp, minDist, param1, \
-           param2, minRadius, maxRadius, midChannelHigh, midChannelLow, wndName
+           param2, minRadius, maxRadius, channelsHigh, channelsLow, wndName
   
     highThreshold  = cv.GetTrackbarPos("Canny High", wndName)
     lowThreshold   = highThreshold / 2
@@ -164,21 +174,30 @@ def refresh(value):
     param2         = cv.GetTrackbarPos("Hough param2", wndName)
     minRadius      = cv.GetTrackbarPos("Min Radius", wndName)
     maxRadius      = cv.GetTrackbarPos("Max Radius", wndName)
-    midChannelHigh = cv.GetTrackbarPos("Mid Channel High", wndName)
-    midChannelLow  = cv.GetTrackbarPos("Mid Channel Low", wndName)
+
+    channelsHigh[0] = cv.GetTrackbarPos("Hue Channel High", wndName)
+    channelsLow[0]  = cv.GetTrackbarPos("Hue Channel Low",  wndName)
+    channelsHigh[1] = cv.GetTrackbarPos("Sat Channel High", wndName)
+    channelsLow[1]  = cv.GetTrackbarPos("Sat Channel Low",  wndName)
+    channelsHigh[2] = cv.GetTrackbarPos("Val Channel High", wndName)
+    channelsLow[2]  = cv.GetTrackbarPos("Val Channel Low",  wndName)
 
     paramsChanged = True
 
 if __name__ == '__main__':
-    cv.NamedWindow(wndName, cv.CV_WINDOW_AUTOSIZE)
+    cv.NamedWindow(wndName)
     
     cv.CreateTrackbar("Canny High",       wndName, highThreshold,  200, refresh)
     cv.CreateTrackbar("Min Dist",         wndName, minDist,        100, refresh)
     cv.CreateTrackbar("Hough param2",     wndName, param2,         100, refresh)
     cv.CreateTrackbar("Min Radius",       wndName, minRadius,      100, refresh)
     cv.CreateTrackbar("Max Radius",       wndName, maxRadius,      100, refresh)
-    cv.CreateTrackbar("Mid Channel High", wndName, midChannelHigh, 255, refresh)
-    cv.CreateTrackbar("Mid Channel Low",  wndName, midChannelLow,  255, refresh)
+    cv.CreateTrackbar("Hue Channel High", wndName, channelsHigh[0],255, refresh)
+    cv.CreateTrackbar("Hue Channel Low",  wndName, channelsLow[0], 255, refresh)
+    cv.CreateTrackbar("Sat Channel High", wndName, channelsHigh[1],255, refresh)
+    cv.CreateTrackbar("Sat Channel Low",  wndName, channelsLow[1], 255, refresh)
+    cv.CreateTrackbar("Val Channel High", wndName, channelsHigh[2],255, refresh)
+    cv.CreateTrackbar("Val Channel Low",  wndName, channelsLow[2], 255, refresh)
     
     # read an image
     img = cv2.imread('normal.jpg')
@@ -191,7 +210,7 @@ if __name__ == '__main__':
         print "*** using canny thresholds:", lowThreshold, highThreshold
         print "*** using Hough parameters: ", dp, minDist, param1, param2, \
                                               minRadius, maxRadius
-        print "*** thresholds on mid channel: ", midChannelLow, midChannelHigh
+        print "*** thresholds on mid channel: ", channelsLow, channelsHigh
         # do detection
         circles = detect(img)
         # print result
