@@ -7,15 +7,16 @@ import cv2.cv as cv
 import numpy as np
 
 # (initial) parameters for the algoritms
-highThreshold = 100
-lowThreshold  = highThreshold / 2
-dp            = 1
-minDist       = 20
-param1        = highThreshold  # reuse the same ;-)
-param2        = 20
-minRadius     = 30
-maxRadius     = 65
-midChannelLow = 107
+highThreshold  = 100
+lowThreshold   = highThreshold / 2
+dp             = 1
+minDist        = 20
+param1         = highThreshold  # reuse the same ;-)
+param2         = 20
+minRadius      = 30
+maxRadius      = 65
+midChannelHigh = 196
+midChannelLow  = 110
 
 # some global config
 wndName   = "Project 2 : Segmentation"
@@ -28,7 +29,7 @@ def detect(img):
     Do the detection.
     '''
     global showSteps, highThreshold, lowThreshold, dp, minDist, param1, param2,\
-           minRadius, maxRadius, midChannelLow, wndName
+           minRadius, maxRadius, midChannelHigh, midChannelLow, wndName
 
     # create a gray scale version of the image, with as type an unsigned 8bit 
     # integer
@@ -80,7 +81,7 @@ def detect(img):
     # 3.c remove circles based on the features
     selectedCircles = np.zeros( (nbCircles), np.bool)
     for i in range(nbCircles):
-        if midChannelLow < features[i,1]:
+        if midChannelLow < features[i,1] < midChannelHigh:
            selectedCircles[i] = 1
     circles = circles[selectedCircles]
 
@@ -99,7 +100,7 @@ def getAverageColorInCircle(img, cx, cy, radius):
     # create a mask representing the circle and use it to extract the valid
     # data to calculate the mean in each channel
     y, x = np.ogrid[-radius:radius, -radius:radius]
-    mask = x**2 + y**2 <= radius**2
+    mask = x**2 + y**2 > radius**2
 
     # trim the mask, in case it stretches beyond the img boundaries
     trimB = 0; trimT = 0; trimL = 0; trimR = 0;
@@ -116,8 +117,10 @@ def getAverageColorInCircle(img, cx, cy, radius):
     # also trim the part of the image
     bottom = cy-radius+trimB; top   = cy+radius-trimT;
     left   = cx-radius+trimL; right = cx+radius-trimR;
+
+    # apply the mask and take the mean of the masked area
     for c in range(channels):
-      C[c] = np.mean(np.ma.masked_array(img[bottom:top, left:right,1], ~mask))
+      C[c] = np.mean(np.ma.masked_array(img[bottom:top, left:right,1], mask))
 
     return C
 
@@ -150,28 +153,30 @@ def showCircles(img, circles, text=None):
 
 def refresh(value):
     global paramsChanged, highThreshold, lowThreshold, dp, minDist, param1, \
-           param2, minRadius, maxRadius, midChannelLow, wndName
+           param2, minRadius, maxRadius, midChannelHigh, midChannelLow, wndName
   
-    highThreshold = cv.GetTrackbarPos("Canny High", wndName)
-    lowThreshold  = highThreshold / 2
-    minDist       = cv.GetTrackbarPos("Min Dist", wndName)
-    param1        = highThreshold  # reuse the same ;-)
-    param2        = cv.GetTrackbarPos("Hough param2", wndName)
-    minRadius     = cv.GetTrackbarPos("Min Radius", wndName)
-    maxRadius     = cv.GetTrackbarPos("Max Radius", wndName)
-    midChannelLow = cv.GetTrackbarPos("Mid Channel Low", wndName)
+    highThreshold  = cv.GetTrackbarPos("Canny High", wndName)
+    lowThreshold   = highThreshold / 2
+    minDist        = cv.GetTrackbarPos("Min Dist", wndName)
+    param1         = highThreshold  # reuse the same ;-)
+    param2         = cv.GetTrackbarPos("Hough param2", wndName)
+    minRadius      = cv.GetTrackbarPos("Min Radius", wndName)
+    maxRadius      = cv.GetTrackbarPos("Max Radius", wndName)
+    midChannelHigh = cv.GetTrackbarPos("Mid Channel High", wndName)
+    midChannelLow  = cv.GetTrackbarPos("Mid Channel Low", wndName)
 
     paramsChanged = True
 
 if __name__ == '__main__':
     cv.NamedWindow(wndName, cv.CV_WINDOW_AUTOSIZE)
     
-    cv.CreateTrackbar("Canny High",      wndName, highThreshold, 200, refresh)
-    cv.CreateTrackbar("Min Dist",        wndName, minDist,       100, refresh)
-    cv.CreateTrackbar("Hough param2",    wndName, param2,        100, refresh)
-    cv.CreateTrackbar("Min Radius",      wndName, minRadius,     100, refresh)
-    cv.CreateTrackbar("Max Radius",      wndName, maxRadius,     100, refresh)    
-    cv.CreateTrackbar("Mid Channel Low", wndName, midChannelLow, 255, refresh)    
+    cv.CreateTrackbar("Canny High",       wndName, highThreshold,  200, refresh)
+    cv.CreateTrackbar("Min Dist",         wndName, minDist,        100, refresh)
+    cv.CreateTrackbar("Hough param2",     wndName, param2,         100, refresh)
+    cv.CreateTrackbar("Min Radius",       wndName, minRadius,      100, refresh)
+    cv.CreateTrackbar("Max Radius",       wndName, maxRadius,      100, refresh)
+    cv.CreateTrackbar("Mid Channel High", wndName, midChannelHigh, 255, refresh)
+    cv.CreateTrackbar("Mid Channel Low",  wndName, midChannelLow,  255, refresh)
     
     # read an image
     img = cv2.imread('normal.jpg')
@@ -184,7 +189,7 @@ if __name__ == '__main__':
         print "*** using canny thresholds:", lowThreshold, highThreshold
         print "*** using Hough parameters: ", dp, minDist, param1, param2, \
                                               minRadius, maxRadius
-        print "*** using low threshold on mid channel: ", midChannelLow
+        print "*** thresholds on mid channel: ", midChannelLow, midChannelHigh
         # do detection
         circles = detect(img)
         # print result
