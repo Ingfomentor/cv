@@ -24,12 +24,14 @@ showSteps = False
 
 paramsChanged = True   # triggers initial detection
 
+perform = 3 # 0=only canny | 1=canny+hough | 2=show HSV | 3=all
+
 def detect(img):
     '''
     Do the detection.
     '''
     global showSteps, highThreshold, lowThreshold, dp, minDist, param1, param2,\
-           minRadius, maxRadius, channelsHigh, channelsLow, wndName
+           minRadius, maxRadius, channelsHigh, channelsLow, wndName, perform
 
     # create a gray scale version of the image, with as type an unsigned 8bit 
     # integer
@@ -48,11 +50,12 @@ def detect(img):
     cv2.Canny(img_g, lowThreshold, highThreshold, edges)
 
     # show the results of canny
-    if showSteps:
+    if showSteps or perform == 0:
       canny_result = np.copy(img_g)
       canny_result[edges.astype(np.bool)] = 0
       cv2.imshow(wndName,canny_result)
-      cv2.waitKey(0)
+      if perform == 0: return
+      else: cv2.waitKey(0)
 
     # 2. do Hough transform on the gray scale image
     circles = cv2.HoughCircles(img_g, cv.CV_HOUGH_GRADIENT, dp=dp,
@@ -61,9 +64,10 @@ def detect(img):
     circles = circles[0,:,:]
     
     # show hough transform result
-    if showSteps:
+    if showSteps or perform == 1:
       showCircles(img, circles)
-      cv2.waitKey(0)
+      if perform == 1: return
+      else: cv2.waitKey(0)
     
     # 3.a get a feature vector (the average color) for each circle
     nbCircles = circles.shape[0]
@@ -76,9 +80,10 @@ def detect(img):
     
     # 3.b show the image with the features (just to provide some help with 
     # selecting the parameters)
-    if showSteps:
+    if showSteps or perform == 2:
       showCircles(img, circles, [ str(features[i,:]) for i in range(nbCircles)])
-      cv2.waitKey(0)
+      if perform == 2: return
+      else: cv2.waitKey(0)
 
     # 3.c remove circles based on the features
     selectedCircles = np.zeros( (nbCircles), np.bool)
@@ -165,7 +170,8 @@ def refresh(value):
     parameters.
     '''
     global paramsChanged, highThreshold, lowThreshold, dp, minDist, param1, \
-           param2, minRadius, maxRadius, channelsHigh, channelsLow, wndName
+           param2, minRadius, maxRadius, channelsHigh, channelsLow, wndName, \
+           perform
   
     highThreshold  = cv.GetTrackbarPos("Canny High", wndName)
     lowThreshold   = highThreshold / 2
@@ -181,6 +187,8 @@ def refresh(value):
     channelsLow[1]  = cv.GetTrackbarPos("Sat Channel Low",  wndName)
     channelsHigh[2] = cv.GetTrackbarPos("Val Channel High", wndName)
     channelsLow[2]  = cv.GetTrackbarPos("Val Channel Low",  wndName)
+
+    perform         = cv.GetTrackbarPos("Perform",  wndName)
 
     paramsChanged = True
 
@@ -198,6 +206,7 @@ if __name__ == '__main__':
     cv.CreateTrackbar("Sat Channel Low",  wndName, channelsLow[1], 255, refresh)
     cv.CreateTrackbar("Val Channel High", wndName, channelsHigh[2],255, refresh)
     cv.CreateTrackbar("Val Channel Low",  wndName, channelsLow[2], 255, refresh)
+    cv.CreateTrackbar("Perform",          wndName, perform,          3, refresh)
     
     # read an image
     img = cv2.imread('normal.jpg')
@@ -214,4 +223,5 @@ if __name__ == '__main__':
         # do detection
         circles = detect(img)
         # print result
-        print "We counted " + str(circles.shape[0]) + " cells."
+        if circles != None:
+          print "We counted " + str(circles.shape[0]) + " cells."
