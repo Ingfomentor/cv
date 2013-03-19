@@ -8,15 +8,15 @@ import numpy as np
 
 # (initial) parameters for the algoritms
 highThreshold  = 100
-lowThreshold   = highThreshold / 2
+lowThreshold   = highThreshold / 2  # this is how Hough uses it
 dp             = 1
-minDist        = 20
+minDist        = 41
 param1         = highThreshold  # reuse the same ;-)
-param2         = 20
-minRadius      = 30
-maxRadius      = 65
-channelsHigh   = np.array([50, 50, 50])
-channelsLow    = np.array([ 0,  0,  0])
+param2         = 13
+minRadius      = 29
+maxRadius      = 60
+channelsHigh   = np.array([167, 51, 255])
+channelsLow    = np.array([ 21, 21,  21])
 
 # some global config
 wndName   = "Project 2 : Segmentation"
