@@ -154,12 +154,12 @@ def showCircles(img, circles, text=None):
     nbCircles = circles.shape[0]
     for i in range(nbCircles):
         cv2.circle(img, (int(circles[i,0]), int(circles[i,1])), 
-                   int(circles[i,2]), cv2.cv.CV_RGB(255, 0, 0), 2, 8, 0)
+                   int(circles[i,2]), cv.CV_RGB(255, 0, 0), 2, 8, 0)
     # draw text
     if text!=None:
         for i in range(nbCircles):
             cv2.putText(img, text[i], (int(circles[i,0]), int(circles[i,1])),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, cv2.cv.CV_RGB(0, 0,255))
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, cv.CV_RGB(0, 0,255))
     # show the result
     cv2.imshow(wndName,img)
 
