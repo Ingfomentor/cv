@@ -63,6 +63,7 @@ def detect(img):
     # show hough transform result
     if showSteps:
       showCircles(img, circles)
+      cv2.waitKey(0)
     
     # 3.a get a feature vector (the average color) for each circle
     nbCircles = circles.shape[0]
@@ -77,6 +78,7 @@ def detect(img):
     # selecting the parameters)
     if showSteps:
       showCircles(img, circles, [ str(features[i,:]) for i in range(nbCircles)])
+      cv2.waitKey(0)
 
     # 3.c remove circles based on the features
     selectedCircles = np.zeros( (nbCircles), np.bool)
