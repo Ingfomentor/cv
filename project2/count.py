@@ -127,7 +127,7 @@ def getAverageColorInCircle(img, cx, cy, radius):
 
     # apply the mask and take the mean of the masked area
     for c in range(channels):
-      C[c] = np.mean(np.ma.masked_array(img[bottom:top, left:right,1], mask))
+      C[c] = np.mean(np.ma.masked_array(img[bottom:top, left:right,c], mask))
 
     return C
 
