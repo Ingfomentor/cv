@@ -5,7 +5,7 @@ import numpy as np
 import fnmatch
 
 
-def create_database(directory, show = True):
+def create_database(directory, show = False):
     '''
     Process all images in the given directory.
     Every image is cropped to the detected face, resized to 100x100 and save
@@ -112,7 +112,7 @@ def normalize(img):
 if __name__ == '__main__':
     # create database of normalized images
     for directory in ["data/arnold", "data/barack"]:
-        create_database(directory, show = False)
+        create_database(directory)
 
     show = True
 
