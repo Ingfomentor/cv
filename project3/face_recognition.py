@@ -32,18 +32,19 @@ def create_database(directory, show = True):
         rects = cascade.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=4,
                                          minSize=(30, 30),
                                          flags = cv.CV_HAAR_SCALE_IMAGE)
-        rects[:,2:] += rects[:,:2]
-        rects = rects[0,:]
+
+        # extract geometry info for first (and only face)
+        x, y, w, h = [ v for v in rects[0,:] ]
+
         # show detected result
         if show:
             vis = img.copy()
-            cv2.rectangle(vis, (rects[0], rects[1]), (rects[2], rects[3]),
-                          (0, 255, 0), 2)
+            cv2.rectangle(vis, (x, y), (x+w, y+h), (0, 255, 0), 2)
             cv2.imshow('img', vis)
             cv2.waitKey(0)
-        # crop image to the rectangle and resample it to 100x100 pixels
 
-        result = #TODO
+        # crop image to the rectangle and resample it to 100x100 pixels
+        result = cv2.resize( img[y:y+h, x:x+w,:], (100,100) )
 
         # show result
         if show:
