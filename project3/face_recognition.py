@@ -76,14 +76,14 @@ def project(W, X, mu):
     Project X on the space spanned by the vectors in W.
     mu is the average image.
     '''
-    return #TODO
+    return cv2.PCAProject(X, mu, W)
 
 def reconstruct(W, Y, mu):
     '''
     Reconstruct an image based on its PCA-coefficients Y, the eigenvectors W
     and the average mu.
     '''
-    return #TODO
+    return cv2.PCABackProject(Y, mu, W)
 
 def pca(X, nb_components=0):
     '''
@@ -150,7 +150,7 @@ if __name__ == '__main__':
 
     nbCorrect = 0
     for i in range(Xtest.shape[0]):
-        X = Xtest[i,:]
+        X = Xtest[i,:].reshape(1, Xtest.shape[1]) # to avoid shape = (10000,)
 
         # project image i on the subspace of arnold and barack
         Ya = project(eigenvectorsa, X, mua)
