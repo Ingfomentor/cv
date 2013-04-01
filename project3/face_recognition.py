@@ -114,8 +114,6 @@ if __name__ == '__main__':
     for directory in ["data/arnold", "data/barack"]:
         create_database(directory)
 
-    show = True
-
     # create big X arrays for arnold and barack
     Xa = createX("data/arnold2")
     Xb = createX("data/barack2")
@@ -155,13 +153,13 @@ if __name__ == '__main__':
 
         Yb = project(eigenvectorsb, X, mub)
         Xb = reconstruct(eigenvectorsb, Yb, mub)
-        if show:
-            # show reconstructed images
-            cv2.imshow('img',np.hstack( (X.reshape(100,100),
-                                         np.clip(Xa.reshape(100,100), 0, 255),
-                                         np.clip(Xb.reshape(100,100), 0, 255))
-                                        ).astype(np.uint8))
-            cv2.waitKey(0)
+
+        # show reconstructed images
+        cv2.imshow('img',np.hstack( (X.reshape(100,100),
+                                     np.clip(Xa.reshape(100,100), 0, 255),
+                                     np.clip(Xb.reshape(100,100), 0, 255))
+                                    ).astype(np.uint8))
+        cv2.waitKey(0)
 
         # classify i
         if np.linalg.norm(Xa-Xtest[i,:]) < np.linalg.norm(Xb-Xtest[i,:]):
