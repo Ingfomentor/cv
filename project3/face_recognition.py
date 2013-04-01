@@ -98,9 +98,7 @@ def pca(X, nb_components=0):
     if (nb_components <= 0) or (nb_components>n):
         nb_components = n
 
-    # TODO
-
-    return
+    return cv2.PCACompute(X, maxComponents=nb_components)
 
 def normalize(img):
     '''
@@ -125,8 +123,8 @@ if __name__ == '__main__':
     Xb = Xb[0:nbTrain,:]
 
     # do pca
-    [eigenvaluesa, eigenvectorsa, mua] = pca(Xa,nb_components=6)
-    [eigenvaluesb, eigenvectorsb, mub] = pca(Xb,nb_components=6)
+    [mua, eigenvectorsa] = pca(Xa,nb_components=6)
+    [mub, eigenvectorsb] = pca(Xb,nb_components=6)
 
     # visualize
     cv2.imshow('img',np.hstack( (mua.reshape(100,100),
