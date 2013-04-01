@@ -62,14 +62,13 @@ def createX(directory,nbDim=10000):
     '''
     filenames = fnmatch.filter(os.listdir(directory),'*.jpg')
     nbImages = len(filenames)
-    X = np.zeros( (nbImages,nbDim) )#, dtype=np.uint8 )
+    X = np.zeros( (nbImages,nbDim), dtype=np.uint8 )
     for i,filename in enumerate( filenames ):
         file_in = directory+"/"+filename
         img = cv2.imread(file_in)
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         gray = cv2.equalizeHist(gray)
         X[i,:] = gray.flatten()
-    print X.dtype
     return X
 
 def project(W, X, mu):
