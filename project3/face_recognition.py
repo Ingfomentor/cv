@@ -128,15 +128,23 @@ if __name__ == '__main__':
 
     # visualize
     cv2.imshow('img',np.hstack( (mua.reshape(100,100),
-                                 normalize(eigenvectorsa[:,0].reshape(100,100)),
-                                 normalize(eigenvectorsa[:,1].reshape(100,100)),
-                                 normalize(eigenvectorsa[:,2].reshape(100,100)))
+                                 normalize(eigenvectorsa[0,:].reshape(100,100)),
+                                 normalize(eigenvectorsa[1,:].reshape(100,100)),
+                                 normalize(eigenvectorsa[2,:].reshape(100,100)),
+                                 normalize(eigenvectorsa[3,:].reshape(100,100)),
+                                 normalize(eigenvectorsa[4,:].reshape(100,100)),
+                                 normalize(eigenvectorsa[5,:].reshape(100,100))
+                                )
                                ).astype(np.uint8))
     cv2.waitKey(0)
     cv2.imshow('img',np.hstack( (mub.reshape(100,100),
-                                 normalize(eigenvectorsb[:,0].reshape(100,100)),
-                                 normalize(eigenvectorsb[:,1].reshape(100,100)),
-                                 normalize(eigenvectorsb[:,2].reshape(100,100)))
+                                 normalize(eigenvectorsb[0,:].reshape(100,100)),
+                                 normalize(eigenvectorsb[1,:].reshape(100,100)),
+                                 normalize(eigenvectorsb[2,:].reshape(100,100)),
+                                 normalize(eigenvectorsb[3,:].reshape(100,100)),
+                                 normalize(eigenvectorsb[4,:].reshape(100,100)),
+                                 normalize(eigenvectorsb[5,:].reshape(100,100))
+                                )
                                ).astype(np.uint8))
     cv2.waitKey(0)
 
