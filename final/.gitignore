@@ -1,3 +1,10 @@
 *.tif
 images/segmented/*.png
+results
+literature
+*.aux
+*.log
+*.pdf
+*.pyg
+*.synctex.gz
 
