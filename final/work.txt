@@ -1,0 +1,7 @@
+22/4
+- read 4 papers (1h)
+- project setup (15min)
+- histogram (2h)
+
+23/4
+- rewrote histogram generation using additional Makefile and Octave (2h30min)
