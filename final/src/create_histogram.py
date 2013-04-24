@@ -20,8 +20,6 @@ if len(sys.argv) < 3:
 image_file  = sys.argv[1]
 output_file = sys.argv[2]
 
-print "*** creating histogram for " + image_file + " into " + output_file
-
 # read image
 image = repo.get_image(image_file)
 

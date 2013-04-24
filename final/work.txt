@@ -1,14 +1,16 @@
-22/4
+22/4 = 3h15min
 - read 4 papers (1h)
 - project setup (15min)
 - histogram (2h)
 
-23/4
+23/4 = 6h
 - rewrote histogram generation using additional Makefile and Octave (2h30min)
 - finding non-linear function (1h30min)
 - implementing non-linear function (2h) - strange bug ??
 
-24/4
+24/4 = 5h30min
 - fixed bug in non-linear function (conversion to int8 instead of uint8) (30min)
 - implemented automagical beta calculation (1h)
 - implementation of create_enhanced_image.py + some clean up (repo) (2h)
+- reading about top-hat transformations (1h30min)
+- cleaned up Makefile (30min)

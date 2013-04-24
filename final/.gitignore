@@ -1,4 +1,6 @@
 *.tif
+*.eps
+*.mat
 images/segmented/*.png
 results
 literature
@@ -7,5 +9,4 @@ literature
 *.pdf
 *.pyg
 *.synctex.gz
-
 *.pyc
