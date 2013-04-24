@@ -8,3 +8,4 @@ literature
 *.pyg
 *.synctex.gz
 
+*.pyc
