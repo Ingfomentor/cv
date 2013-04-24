@@ -9,6 +9,9 @@ import sys
 import cv2
 import scipy.io as sio
 
+import repository as repo
+
+
 # obtain arguments
 if len(sys.argv) < 3:
   print "!!! Missing arguments, please provide input and output filenames."
@@ -20,7 +23,7 @@ output_file = sys.argv[2]
 print "*** creating histogram for " + image_file + " into " + output_file
 
 # read image
-image = cv2.imread(image_file)
+image = repo.get_image(image_file)
 
 # convert to grayscale
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -29,4 +32,4 @@ gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 histogram = cv2.calcHist([gray], [0], None, [256], [0,255])
     
 # save data to disk in Matlab format for further processing using Octave
-sio.savemat(output_file, dict(histogram=histogram))
+repo.put_data(output_file, 'histogram', histogram)
