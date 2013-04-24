@@ -21,6 +21,7 @@ LC_CTYPE="C"
 all: histograms
 
 histograms: $(IMAGES:.tif=_histogram.eps)
+enhanced_images: $(IMAGES:.tif=_enhanced.tif)
 
 %_histogram.mat: images/%.tif results/histograms
 	@${PYTHON} src/create_histogram.py $< $(word 2,$^)/$@
@@ -28,7 +29,13 @@ histograms: $(IMAGES:.tif=_histogram.eps)
 %_histogram.eps: %_histogram.mat results/histograms
 	@${OCTAVE} --eval "plot_histogram( '$(word 2,$^)/$<', '$(word 2,$^)/$@');" > /dev/null
 
+%_enhanced.tif: images/%.tif results/histograms/%_histogram.mat results/images
+	@${PYTHON} src/create_enhanced_image.py $< $(word 2,$^) $(word 3,$^)/$@
+
 results/histograms:
+	@mkdir -p $@
+
+results/images:
 	@mkdir -p $@
 
 ${REPORT}:
