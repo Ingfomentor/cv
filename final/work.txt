@@ -19,3 +19,6 @@
 - implementation of top/back hat filter (2h)
 - implementation of cropping (1h)
 - implementation of detection of upper/lower jaw (1h)
+
+26/4
+- improved thresholding to focus on center using Gaussian probability (2h30min)

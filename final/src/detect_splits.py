@@ -13,51 +13,55 @@ import math
 import cv2
 import cv2.cv as cv
 import numpy as np
-import scipy.io as sio
 
 import repository as repo
 
 '''
 TODO
 - implement piece-wise + spline function
-- combine with gaussian probability curve to select most probable
-  center = top
 '''
-
-upper = 64
-lower = 64
-wndName = 'main'
-paramsChanged = True
 
 def find_horizontal_splits(image):
   '''
-  
+  Sums the intensities of each row, applying a Gaussian probability-based factor
+  to darken centered-regions (with a bias of 11 percent down) and to lighten
+  less probable areas.
+  @param image to detect split(s) in
+  @return lowest intensity value(s), representing the height of the split(s)
   '''
   
-  # applied a factor to the intensities to darken the middle part and lighten
-  # the upper and lower parts
-  image = apply_vertical_gaussian_intensity_factor(image)
-
-  # sum each row
+  # sum each row to get row intensity
   intensities = np.sum(image[:,:,1], 1)
+
+  # apply a Gaussian-based factor to lighten top/bottom region and darken 
+  # central regions, equal to the probability where the split occurs
+  count = len(intensities)
+  factors = np.zeros(count)
+  for y in range(count):
+    yy = ( float(y) - (float(count)/2) ) / float(count) # conver to -1..1 range
+    g = gaussian_value(yy-0.11)                         # 11% bias downwards
+    factors[y] = 1.4 - g                                # invert and shift
+
+  # apply probability correction factors
+  intensities = np.multiply(intensities, factors)
 
   # find lowest values = jaw separation valleys
   return np.argmin(intensities)
 
-def apply_vertical_gaussian_intensity_factor(image):
+def gaussian_value(x):
   '''
+  Computes a Gaussian value for a given x value between -1 and 1
+  @param x value between -1 and 1
+  @return Gaussian value for x
   '''
-  global upper, lower
-  
-  # rough low threshold
-  image[image>upper] = 255
-  image[image<lower] = 0
-  
-  return image
+  return ( math.e ** - (x ** 2 * 10) ) / math.sqrt(2*math.pi*0.1)
 
 def process(image):
   '''
-  
+  Process a given image, detecting the horizontal split(s) and annotating them
+  on the image.
+  @param image to process
+  @return processed image, annotated with split(s)
   '''
   
   # find horizontal splits
@@ -74,39 +78,17 @@ def process(image):
 
 def show(image):
   '''
-  
+  Shows the original and the annotated image with split(s)
+  @param image to show and process
   '''
-  global upper, lower, paramsChanged
-  
-  # create UI
-  cv.NamedWindow(wndName)
-  cv.CreateTrackbar("upper", wndName, upper, 255, refresh)
-  cv.CreateTrackbar("lower", wndName, lower, 255, refresh)
-
   # show original
-  cv2.imshow(wndName, image)
+  cv2.imshow("splits", image)
   cv2.waitKey(0)
   
-  while cv2.waitKey(100) == -1:
-    if paramsChanged:
-      paramsChanged = False
-
-      print "upper = " + str(upper) + " / lower = " + str(lower)
-      annotated = process(np.copy(image))
-      cv2.imshow(wndName, annotated)
-
-def refresh(value):
-  '''
-  Callback function for all trackbars. The value that is passed is not used,
-  because we don't known which trackbar it comes from. We simply update all
-  parameters.
-  '''
-  global paramsChanged, wndName, upper, lower
-  
-  upper = cv.GetTrackbarPos("upper", wndName)
-  lower = cv.GetTrackbarPos("lower", wndName)
-    
-  paramsChanged = True
+  # show annotated splits
+  process(image)
+  cv2.imshow("splits", image)
+  cv2.waitKey(0)
 
 # this part of the code is only executed if the file is run stand-alone
 if __name__ == '__main__':
