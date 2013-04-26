@@ -14,3 +14,8 @@
 - implementation of create_enhanced_image.py + some clean up (repo) (2h)
 - reading about top-hat transformations (1h30min)
 - cleaned up Makefile (30min)
+
+25/4 = 4
+- implementation of top/back hat filter (2h)
+- implementation of cropping (1h)
+- implementation of detection of upper/lower jaw (1h)

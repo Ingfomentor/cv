@@ -87,17 +87,17 @@ def process(input_file, histogram_file, output_file):
   enhanced  = stretch_contrast(image, alpha, beta)
   repo.put_image(output_file, enhanced)
 
-def show(index):
+def show(image_file, histogram_file):
   '''
   UI for manual experiments for choosing alpha and beta values
   @param gray scale image
   @param histogram of image
   '''
-  global beta
+  global beta, paramsChanged
 
   # load data and init beta
-  gray      = repo.get_grayscale_image(index)
-  histogram = repo.get_histogram_data(index)
+  gray      = repo.get_grayscale_image(image_file)
+  histogram = repo.get_data(histogram_file, "histogram")
   beta      = calc_beta(histogram)
   
   # create UI
@@ -131,8 +131,8 @@ if __name__ == '__main__':
   # obtain arguments and dispatch
   if len(sys.argv) > 3:                 # 3 arg = in, hist & out image files
     process(sys.argv[1], sys.argv[2], sys.argv[3])
-  elif len(sys.argv) > 1:
-    show(sys.argv[2])                   # 1 arg = index of image to show in UI
+  elif len(sys.argv) > 2:
+    show(sys.argv[1], sys.argv[2])      # 2 arg = input and hist image files
   else:
     print "!!! Missing argument. " + \
           "Please provide an image index or input and output file."

@@ -14,6 +14,7 @@ OCTAVE=/opt/local/bin/octave --silent \
                              --eval "addpath(strcat(pwd,'/src'));" \
                              --eval "warning('off', 'print:missing_fig2dev');" \
                              --eval "warning('off', 'print:missing_pstoedit');"
+MONTAGE=montage -label "%f"
 
 SRC_DIR=images
 IMAGES=$(notdir $(wildcard ${SRC_DIR}/*.tif))
@@ -22,23 +23,34 @@ LC_CTYPE="C"
 
 VPATH = ${SRC_DIR}
 
-all: clean enhanced_histograms histograms
+all: clean cropped_images
 
-histograms: $(IMAGES:.tif=_histogram.eps)
-enhanced_images: $(IMAGES:.tif=_enhanced.tif)
-enhanced_histograms: $(IMAGES:.tif=_enhanced_histogram.eps)
+cropped_images: $(IMAGES:.tif=_cropped.tif)
+cropped_histograms: $(IMAGES:.tif=_cropped_histogram.eps)
+cropped_enhanced_images: $(IMAGES:.tif=_cropped_enhanced.tif)
+cropped_enhanced_histograms: $(IMAGES:.tif=_cropped_enhanced_histogram.eps)
+hsplits.png: $(IMAGES:.tif=_hsplits.tif)
+	${MONTAGE} $^ $@
+
+%_cropped.tif: %.tif
+	@echo "--- cropping image $<"
+	@${PYTHON} src/crop_image.py $< $@ 700 1100
 
 %_histogram.mat: %.tif
 	@echo "--- creating histogram for $<"
 	@${PYTHON} src/create_histogram.py $< $@
 
 %_histogram.eps: %_histogram.mat
-	@echo "--- creating histogram image for $<"
+	@echo "--- visualizing histogram $<"
 	@${OCTAVE} --eval "plot_histogram( '$<', '$@');" > /dev/null
 
 %_enhanced.tif: %.tif %_histogram.mat
 	@echo "--- creating enhanced version of $<"
 	@${PYTHON} src/create_enhanced_image.py $< $(word 2,$^) $@
+
+%_hsplits.tif: %_cropped.tif
+	@echo "--- detecting horizontal jaw split $<"
+	@${PYTHON} src/detect_splits.py $< $@
 
 results/histograms:
 	@mkdir -p $@
