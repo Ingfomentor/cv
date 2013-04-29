@@ -20,5 +20,9 @@
 - implementation of cropping (1h)
 - implementation of detection of upper/lower jaw (1h)
 
-26/4
+26/4 = 3h30min
 - improved thresholding to focus on center using Gaussian probability (2h30min)
+- implementation of piece-wise jaw-split detection (1h)
+
+29/4 = 
+- applied relative Gaussian probability on intensities (see paper 5) (1h30min)

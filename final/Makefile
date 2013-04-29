@@ -1,4 +1,11 @@
 PROJECT=final
+
+# configuration
+CROP_WIDTH=700
+CROP_HEIGHT=1100
+EXPECTED_JAW_SPLIT=0.7		# this causes 2 bad detections, which is lowest
+													# can be fixed with exceptions
+
 SRC_DIR=src
 SRCS=${SRC_DIR}/${PROJECT}.py
 REPORT_DIR=report
@@ -34,7 +41,7 @@ hsplits.png: $(IMAGES:.tif=_hsplits.tif)
 
 %_cropped.tif: %.tif
 	@echo "--- cropping image $<"
-	@${PYTHON} src/crop_image.py $< $@ 700 1100
+	@${PYTHON} src/crop_image.py $< $@ ${CROP_WIDTH} ${CROP_HEIGHT}
 
 %_histogram.mat: %.tif
 	@echo "--- creating histogram for $<"
@@ -48,9 +55,9 @@ hsplits.png: $(IMAGES:.tif=_hsplits.tif)
 	@echo "--- creating enhanced version of $<"
 	@${PYTHON} src/create_enhanced_image.py $< $(word 2,$^) $@
 
-%_hsplits.tif: %_cropped.tif
+%_hsplits.tif: %_cropped_enhanced.tif
 	@echo "--- detecting horizontal jaw split $<"
-	@${PYTHON} src/detect_splits.py $< $@
+	@${PYTHON} src/detect_splits.py $< $@ ${EXPECTED_JAW_SPLIT}
 
 results/histograms:
 	@mkdir -p $@
