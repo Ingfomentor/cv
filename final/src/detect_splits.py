@@ -101,7 +101,7 @@ def process(image, slices=7, start=None):
   image  = draw_split(image, splits, current_split, slice_width)
   prev_left_split  = splits
   prev_right_split = splits
-  while current_split >= 0:
+  while current_split > 0:
     current_split = current_split - 1
 
     # go left
