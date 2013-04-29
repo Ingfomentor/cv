@@ -101,7 +101,7 @@ def process(image, slices=7, start=None):
   middle = slices / 2   # 7 / 2 = 3 == middle (0..6)
   current_split = middle
   splits = find_horizontal_splits(image, current_split * slice_width, slice_width, prev_split)
-  image  = draw_split(image, splits, current_split, slice_width)
+  #image  = draw_split(image, splits, current_split, slice_width)
   prev_left_split  = splits
   prev_right_split = splits
   ys = np.array([splits])
@@ -110,13 +110,13 @@ def process(image, slices=7, start=None):
 
     # go left
     left_splits = find_horizontal_splits(image, current_split * slice_width, slice_width, prev_left_split)
-    image = draw_split(image, left_splits, current_split, slice_width)
+    #image = draw_split(image, left_splits, current_split, slice_width)
     prev_left_split = left_splits
     ys = np.insert(ys, 0, left_splits)
     
     # and right
     right_splits = find_horizontal_splits(image, (slices - 1 - current_split) * slice_width, slice_width, prev_right_split)
-    image = draw_split(image, right_splits, slices - 1 - current_split, slice_width)
+    #image = draw_split(image, right_splits, slices - 1 - current_split, slice_width)
     prev_right_split = right_splits
     ys = np.append(ys, right_splits)
   
@@ -151,9 +151,11 @@ def draw_spline(image, tck):
   xnew = np.arange(width)
   ynew = interpolate.splev(xnew, tck, der=0)
 
-  image[ynew.astype(np.int),xnew.astype(np.int),:] = [0,0,255]
-  image[(ynew-1).astype(np.int),xnew.astype(np.int),:] = [0,0,255]
-  image[(ynew+1).astype(np.int),xnew.astype(np.int),:] = [0,0,255]
+  image[ynew.astype(np.int),xnew.astype(np.int),:]     = [0,255,0]
+  image[(ynew-2).astype(np.int),xnew.astype(np.int),:] = [0,255,0]
+  image[(ynew-1).astype(np.int),xnew.astype(np.int),:] = [0,255,0]
+  image[(ynew+1).astype(np.int),xnew.astype(np.int),:] = [0,255,0]
+  image[(ynew+2).astype(np.int),xnew.astype(np.int),:] = [0,255,0]
   
   return image
 

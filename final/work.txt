@@ -26,3 +26,5 @@
 
 29/4 = 
 - applied relative Gaussian probability on intensities (see paper 5) (1h30min)
+- implemented spline interpolation (3h)
+  - find a way to render splines on numpy array image (1h)
