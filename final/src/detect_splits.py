@@ -14,6 +14,8 @@ import cv2
 import cv2.cv as cv
 import numpy as np
 
+from scipy import interpolate
+
 import repository as repo
 
 '''
@@ -21,6 +23,7 @@ TODO
 - implement spline combination of splits
 - clean up split ? splits !
 - MAGIC NUMBER 1.4 invert and SHIFT = explain
+- export more configuration to arguments
 '''
 
 def find_horizontal_splits(image, left=0, width=None, previous=None):
@@ -101,6 +104,7 @@ def process(image, slices=7, start=None):
   image  = draw_split(image, splits, current_split, slice_width)
   prev_left_split  = splits
   prev_right_split = splits
+  ys = np.array([splits])
   while current_split > 0:
     current_split = current_split - 1
 
@@ -108,11 +112,18 @@ def process(image, slices=7, start=None):
     left_splits = find_horizontal_splits(image, current_split * slice_width, slice_width, prev_left_split)
     image = draw_split(image, left_splits, current_split, slice_width)
     prev_left_split = left_splits
+    ys = np.insert(ys, 0, left_splits)
     
     # and right
     right_splits = find_horizontal_splits(image, (slices - 1 - current_split) * slice_width, slice_width, prev_right_split)
     image = draw_split(image, right_splits, slices - 1 - current_split, slice_width)
     prev_right_split = right_splits
+    ys = np.append(ys, right_splits)
+  
+  # interpolate using spline
+  xs = np.arange((width/slices)/2, width, width/slices)
+  tck = interpolate.splrep(xs, ys, s=0)
+  image = draw_spline(image, tck)
   
   return image
 
@@ -132,6 +143,18 @@ def draw_split(image, splits, index, width, color=(0,255,0), line_width=3 ):
     pt1 = (index * width, split)
     pt2 = ((index+1) * width, split)
     cv2.line(image, pt1, pt2, color, line_width)
+  return image
+
+def draw_spline(image, tck):
+  height, width, _ = image.shape
+
+  xnew = np.arange(width)
+  ynew = interpolate.splev(xnew, tck, der=0)
+
+  image[ynew.astype(np.int),xnew.astype(np.int),:] = [0,0,255]
+  image[(ynew-1).astype(np.int),xnew.astype(np.int),:] = [0,0,255]
+  image[(ynew+1).astype(np.int),xnew.astype(np.int),:] = [0,0,255]
+  
   return image
 
 def show(image, start=None):
