@@ -24,7 +24,13 @@
 - improved thresholding to focus on center using Gaussian probability (2h30min)
 - implementation of piece-wise jaw-split detection (1h)
 
-29/4 = 
+29/4 = 6h30min
 - applied relative Gaussian probability on intensities (see paper 5) (1h30min)
 - implemented spline interpolation (3h)
-  - find a way to render splines on numpy array image (1h)
+  detail:find a way to render splines on numpy array image (2h)
+- clean up + implemented histogram along spline (1h)
+- detection of valleys in between teeth  (1h)
+
+30/4
+- clean up and added code to isolate individual teeth (2h30min)
+
