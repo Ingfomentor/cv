@@ -22,5 +22,5 @@ def put_image(file_name, image):
 def get_data(file_name, var):
   return sio.loadmat(file_name)[var]
 
-def put_data(file_name, var, data):
-  sio.savemat(file_name, {var:data})
+def put_data(file_name, data):
+  sio.savemat(file_name, data)

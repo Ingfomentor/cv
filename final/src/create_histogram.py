@@ -30,4 +30,4 @@ gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 histogram = cv2.calcHist([gray], [0], None, [256], [0,255])
     
 # save data to disk in Matlab format for further processing using Octave
-repo.put_data(output_file, 'histogram', histogram)
+repo.put_data(output_file, {'histogram': histogram})
