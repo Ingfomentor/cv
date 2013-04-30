@@ -3,8 +3,12 @@ PROJECT=final
 # configuration
 CROP_WIDTH=700
 CROP_HEIGHT=1100
-EXPECTED_JAW_SPLIT=0.7		# this causes 2 bad detections, which is lowest
-													# can be fixed with exceptions
+SLICES=11
+EXPECTED_JAW_SPLIT=0.7
+RHO=0.4
+INVERSION_TOP=1.1
+
+# !!! DON'T change anything below this point (unless you know what you're doing)
 
 SRC_DIR=src
 SRCS=${SRC_DIR}/${PROJECT}.py
@@ -30,13 +34,14 @@ LC_CTYPE="C"
 
 VPATH = ${SRC_DIR}
 
+
 all: clean cropped_images
 
 cropped_images: $(IMAGES:.tif=_cropped.tif)
 cropped_histograms: $(IMAGES:.tif=_cropped_histogram.eps)
 cropped_enhanced_images: $(IMAGES:.tif=_cropped_enhanced.tif)
 cropped_enhanced_histograms: $(IMAGES:.tif=_cropped_enhanced_histogram.eps)
-hsplits.png: $(IMAGES:.tif=_hsplits.tif)
+splits.png: $(IMAGES:.tif=_splits.tif)
 	${MONTAGE} $^ $@
 
 %_cropped.tif: %.tif
@@ -55,7 +60,11 @@ hsplits.png: $(IMAGES:.tif=_hsplits.tif)
 	@echo "--- creating enhanced version of $<"
 	@${PYTHON} src/create_enhanced_image.py $< $(word 2,$^) $@
 
-%_hsplits.tif: %_cropped_enhanced.tif
+%_jaw_split.mat: %.tif
+	@echo "--- detecting jaw split for $<"
+	${PYTHON} src/jaw_split.py $< ${SLICES} ${EXPECTED_JAW_SPLIT} ${RHO} ${INVERSION_TOP} $@ 
+
+%_splits.tif: %_cropped_enhanced.tif
 	@echo "--- detecting horizontal jaw split $<"
 	@${PYTHON} src/detect_splits.py $< $@ ${EXPECTED_JAW_SPLIT}
 

@@ -33,4 +33,5 @@
 
 30/4
 - clean up and added code to isolate individual teeth (2h30min)
+- extracted jaw_split from detect_splits (2h)
 
