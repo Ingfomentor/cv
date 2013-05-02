@@ -233,6 +233,9 @@ if __name__ == '__main__':
   if output_file != None:
     repo.put_data(output_file, { 'splits'    : splits, 
                                  'histograms': histograms,
-                                 'spline'    : spline})
+                                 'spline_t'  : spline[0],
+                                 'spline_c'  : spline[1],
+                                 'spline_k'  : spline[2]
+                               })
   else:
     show(image, splits, histograms, spline)

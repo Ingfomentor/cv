@@ -19,8 +19,8 @@ def get_grayscale_image(file_name):
 def put_image(file_name, image):
   cv2.imwrite(file_name, image)
 
-def get_data(file_name, var):
-  return sio.loadmat(file_name)[var]
+def get_data(file_name):
+  return sio.loadmat(file_name, squeeze_me=True)
 
 def put_data(file_name, data):
   sio.savemat(file_name, data)

@@ -3,7 +3,7 @@ PROJECT=final
 # configuration
 CROP_WIDTH=700
 CROP_HEIGHT=1100
-SLICES=11
+SLICES=7
 EXPECTED_JAW_SPLIT=0.7
 RHO=0.4
 INVERSION_TOP=1.1
@@ -25,7 +25,7 @@ OCTAVE=/opt/local/bin/octave --silent \
                              --eval "addpath(strcat(pwd,'/src'));" \
                              --eval "warning('off', 'print:missing_fig2dev');" \
                              --eval "warning('off', 'print:missing_pstoedit');"
-MONTAGE=montage -label "%f"
+MONTAGE=montage -label "%f" -geometry 150x220>+4+3
 
 SRC_DIR=images
 IMAGES=$(notdir $(wildcard ${SRC_DIR}/*.tif))
@@ -41,8 +41,12 @@ cropped_images: $(IMAGES:.tif=_cropped.tif)
 cropped_histograms: $(IMAGES:.tif=_cropped_histogram.eps)
 cropped_enhanced_images: $(IMAGES:.tif=_cropped_enhanced.tif)
 cropped_enhanced_histograms: $(IMAGES:.tif=_cropped_enhanced_histogram.eps)
-splits.png: $(IMAGES:.tif=_splits.tif)
-	${MONTAGE} $^ $@
+jaw_splits.png: $(IMAGES:.tif=_cropped_enhanced_jaw_split.tif)
+	@echo "--- creating montage for $@"
+	@${MONTAGE} $^ $@
+teeth_isolation.png: $(IMAGES:.tif=_cropped_enhanced_teeth_isolation.tif)
+	@echo "--- creating montage for $@"
+	@${MONTAGE} $^ $@
 
 %_cropped.tif: %.tif
 	@echo "--- cropping image $<"
@@ -58,15 +62,23 @@ splits.png: $(IMAGES:.tif=_splits.tif)
 
 %_enhanced.tif: %.tif %_histogram.mat
 	@echo "--- creating enhanced version of $<"
-	@${PYTHON} src/create_enhanced_image.py $< $(word 2,$^) $@
+	@${PYTHON} src/create_enhanced_image.py $^ $@
 
 %_jaw_split.mat: %.tif
 	@echo "--- detecting jaw split for $<"
-	${PYTHON} src/jaw_split.py $< ${SLICES} ${EXPECTED_JAW_SPLIT} ${RHO} ${INVERSION_TOP} $@ 
+	@${PYTHON} src/jaw_split.py $< ${SLICES} ${EXPECTED_JAW_SPLIT} ${RHO} ${INVERSION_TOP} $@ 
 
-%_splits.tif: %_cropped_enhanced.tif
-	@echo "--- detecting horizontal jaw split $<"
-	@${PYTHON} src/detect_splits.py $< $@ ${EXPECTED_JAW_SPLIT}
+%_jaw_split.tif: %.tif %_jaw_split.mat
+	@echo "--- visualizing jaw split for $<"
+	@${PYTHON} src/visualize_jaw_split.py $^ $@
+
+%_teeth_isolation.mat: %.tif %_jaw_split.mat
+	@echo "--- isolating incisors for $<"
+	@${PYTHON} src/teeth_isolation.py $^ $@
+
+%_teeth_isolation.tif: %.tif %_jaw_split.mat %_teeth_isolation.mat
+	@echo "--- visualizing incisors for $<"
+	@${PYTHON} src/visualize_teeth_isolation.py $^ $@
 
 results/histograms:
 	@mkdir -p $@
@@ -94,5 +106,5 @@ clean:
 mrproper: clean
 	@${RM} verslag/verslag.pdf
 
-.PRECIOUS: %_histogram.mat %_histogram.eps %_enhanced.tif
-.SECONDARY: %_histogram.mat %_histogram.eps %_enhanced.tif
+.PRECIOUS: %_histogram.mat %_histogram.eps %_enhanced.tif %_jaw_split.mat %_teeth_isolation.mat
+.SECONDARY: %_histogram.mat %_histogram.eps %_enhanced.tif %_jaw_split.mat %_teeth_isolation.mat

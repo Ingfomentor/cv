@@ -20,10 +20,10 @@ def draw_spline(image, tck):
   # always take a copy of an image, before modifying it
   image = np.copy(image)
 
-  _, width, _ = image.shape
+  height, width, _ = image.shape
 
   xs = np.arange(width).astype(np.int)
-  ys = interpolate.splev(xs, tck, der=0).astype(np.int)
+  ys = interpolate.splev(xs, tck, der=0).astype(np.int).clip(0,height-3)
 
   # poor-mans's 5px wide (high) curve drawing
   image[ys-2,xs,:] = [255,0,0]

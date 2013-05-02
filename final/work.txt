@@ -15,7 +15,7 @@
 - reading about top-hat transformations (1h30min)
 - cleaned up Makefile (30min)
 
-25/4 = 4
+25/4 = 4h
 - implementation of top/back hat filter (2h)
 - implementation of cropping (1h)
 - implementation of detection of upper/lower jaw (1h)
@@ -31,7 +31,11 @@
 - clean up + implemented histogram along spline (1h)
 - detection of valleys in between teeth  (1h)
 
-30/4
+30/4 = 5h 
 - clean up and added code to isolate individual teeth (2h30min)
 - extracted jaw_split from detect_splits (2h)
+- extracted teeth_isolation from detect_splits - start (30min)
 
+2/5 = 
+- (continue) extracted teeth_isolation from detect_splits (3h)
+- created visualize_ scripts (1h30min)

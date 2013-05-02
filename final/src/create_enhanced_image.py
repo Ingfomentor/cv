@@ -12,7 +12,6 @@ import math
 import cv2
 import cv2.cv as cv
 import numpy as np
-import scipy.io as sio
 
 import repository as repo
 
@@ -82,7 +81,7 @@ def process(input_file, histogram_file, output_file):
   global alpha
   
   image     = repo.get_image(input_file)
-  histogram = repo.get_data(histogram_file, 'histogram')
+  histogram = repo.get_data(histogram_file)['histogram']
   beta      = calc_beta(histogram)
   enhanced  = stretch_contrast(image, alpha, beta)
   repo.put_image(output_file, enhanced)
