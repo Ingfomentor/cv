@@ -185,10 +185,9 @@ def draw_splits(image, splits, color=(0,255,0), line_width=3 ):
   slice_width = width / slices
 
   # show lines indicating splits/valleys
-  for slice in range(slices):
-    split = splits[slice]
-    pt1   = (slice * slice_width, split)
-    pt2   = ((slice+1) * slice_width, split)
+  for index, split in enumerate(splits):
+    pt1 = (index * slice_width, split)
+    pt2 = ((index+1) * slice_width, split)
     cv2.line(image, pt1, pt2, color, line_width)
 
   return image
