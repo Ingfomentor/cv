@@ -19,6 +19,7 @@ import numpy as np
 from scipy import interpolate
 
 import repository as repo
+from spline_utils import draw_spline
 
 
 def detect_splits(image, slices, expected_split, rho, inversion_top):
@@ -191,32 +192,6 @@ def draw_splits(image, splits, color=(0,255,0), line_width=3 ):
     cv2.line(image, pt1, pt2, color, line_width)
 
   return image
-
-def draw_spline(image, tck):
-  '''
-  Draws a spline on an image given tck parameters
-  @param image to draw on
-  @param tck spline parameters
-  @retun image with spline drawn onto
-  '''
-
-  # always take a copy of an image, before modifying it
-  image = np.copy(image)
-
-  _, width, _ = image.shape
-
-  xs = np.arange(width).astype(np.int)
-  ys = interpolate.splev(xs, tck, der=0).astype(np.int)
-
-  # poor-mans's 5px wide (high) curve drawing
-  image[ys-2,xs,:] = [255,0,0]
-  image[ys-1,xs,:] = [255,0,0]
-  image[ys,  xs,:] = [255,0,0]
-  image[ys+1,xs,:] = [255,0,0]
-  image[ys+2,xs,:] = [255,0,0]
-  
-  return image
-
 
 # this part of the code is only executed if the file is run stand-alone
 if __name__ == '__main__':
