@@ -35,23 +35,23 @@ LC_CTYPE="C"
 VPATH = ${SRC_DIR}
 
 
-all: clean cropped_images
+all: clean jaw_splits.png teeth_iso.png roi.png
 
-cropped_images: $(IMAGES:.tif=_cropped.tif)
-cropped_histograms: $(IMAGES:.tif=_cropped_histogram.eps)
-cropped_enhanced_images: $(IMAGES:.tif=_cropped_enhanced.tif)
-cropped_enhanced_histograms: $(IMAGES:.tif=_cropped_enhanced_histogram.eps)
-jaw_splits.png: $(IMAGES:.tif=_cropped_enhanced_jaw_split.tif)
+crp_images: $(IMAGES:.tif=_crp.tif)
+crp_histograms: $(IMAGES:.tif=_crp_histogram.eps)
+crp_enh_images: $(IMAGES:.tif=_crp_enh.tif)
+crp_enh_histograms: $(IMAGES:.tif=_crp_enh_histogram.eps)
+jaw_splits.png: $(IMAGES:.tif=_crp_enh_jaw_split.tif)
 	@echo "--- creating montage for $@"
 	@${MONTAGE} $^ $@
-teeth_isolation.png: $(IMAGES:.tif=_cropped_enhanced_teeth_isolation.tif)
+teeth_iso.png: $(IMAGES:.tif=_crp_enh_teeth_iso.tif)
 	@echo "--- creating montage for $@"
 	@${MONTAGE} $^ $@
-roi.png: $(IMAGES:.tif=_cropped_enhanced_roi.tif)
+roi.png: $(IMAGES:.tif=_crp_enh_roi.tif)
 	@echo "--- creating montage for $@"
 	@${MONTAGE} $^ $@
 
-%_cropped.tif: %.tif
+%_crp.tif: %.tif
 	@echo "--- cropping image $<"
 	@${PYTHON} src/crop_image.py $< $@ ${CROP_WIDTH} ${CROP_HEIGHT}
 
@@ -63,7 +63,7 @@ roi.png: $(IMAGES:.tif=_cropped_enhanced_roi.tif)
 	@echo "--- visualizing histogram $<"
 	@${OCTAVE} --eval "plot_histogram( '$<', '$@');" > /dev/null
 
-%_enhanced.tif: %.tif %_histogram.mat
+%_enh.tif: %.tif %_histogram.mat
 	@echo "--- creating enhanced version of $<"
 	@${PYTHON} src/create_enhanced_image.py $^ $@
 
@@ -75,19 +75,19 @@ roi.png: $(IMAGES:.tif=_cropped_enhanced_roi.tif)
 	@echo "--- visualizing jaw split for $<"
 	@${PYTHON} src/visualize_jaw_split.py $^ $@
 
-%_teeth_isolation.mat: %.tif %_jaw_split.mat
+%_teeth_iso.mat: %.tif %_jaw_split.mat
 	@echo "--- isolating incisors for $<"
 	@${PYTHON} src/teeth_isolation.py $^ $@
 
-%_teeth_isolation.tif: %.tif %_jaw_split.mat %_teeth_isolation.mat
+%_teeth_iso.tif: %.tif %_jaw_split.mat %_teeth_iso.mat
 	@echo "--- visualizing incisors for $<"
 	@${PYTHON} src/visualize_teeth_isolation.py $^ $@
 
-%_roi.mat: %_teeth_isolation.mat
+%_roi.mat: %_teeth_iso.mat
 	@echo "--- creating ROI from $<"
 	@${PYTHON} src/roi.py $< $@
 
-%_roi.tif: %.tif %_jaw_split.mat %_teeth_isolation.mat %_roi.mat
+%_roi.tif: %.tif %_jaw_split.mat %_teeth_iso.mat %_roi.mat
 	@echo "--- visualizing ROI for $<"
 	@${PYTHON} src/visualize_roi.py $^ $@
 
@@ -105,11 +105,11 @@ dist:
 	@rm -rf ${DIST_DIR}
 
 clean:
-	@${RM} *.{mat,eps,tif}
+	@${RM} *.{mat,eps,tif,png}
 	@${RM} verslag/*.{aux,log,synctex.gz}
 
 mrproper: clean
 	@${RM} verslag/verslag.pdf
 
-.PRECIOUS: %_histogram.mat %_histogram.eps %_enhanced.tif %_jaw_split.mat %_teeth_isolation.mat
-.SECONDARY: %_histogram.mat %_histogram.eps %_enhanced.tif %_jaw_split.mat %_teeth_isolation.mat
+.PRECIOUS: %_histogram.mat %_histogram.eps %_enh.tif %_jaw_split.mat %_teeth_iso.mat %_roi.mat
+.SECONDARY: %_histogram.mat %_histogram.eps %_enh.tif %_jaw_split.mat %_teeth_iso.mat %_roi.mat

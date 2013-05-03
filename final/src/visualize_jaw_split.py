@@ -14,7 +14,7 @@ from jaw_split import draw_splits
 
 
 # obtain arguments
-if len(sys.argv) < 5:
+if len(sys.argv) < 4:
   print "!!! Missing arguments, please provide input, data and output filenames."
   sys.exit(2)
 
