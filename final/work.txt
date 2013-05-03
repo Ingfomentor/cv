@@ -36,6 +36,10 @@
 - extracted jaw_split from detect_splits (2h)
 - extracted teeth_isolation from detect_splits - start (30min)
 
-2/5 = 
+2/5 = 4h30min
 - (continue) extracted teeth_isolation from detect_splits (3h)
 - created visualize_ scripts (1h30min)
+- find enclosing rectangles/ROI (started) (1h30)
+
+3/5 = 1h
+- find enclosing rectangles/ROI (completed) (1h)

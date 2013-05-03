@@ -3,7 +3,7 @@ PROJECT=final
 # configuration
 CROP_WIDTH=700
 CROP_HEIGHT=1100
-SLICES=7
+SLICES=5
 EXPECTED_JAW_SPLIT=0.7
 RHO=0.4
 INVERSION_TOP=1.1
@@ -47,6 +47,9 @@ jaw_splits.png: $(IMAGES:.tif=_cropped_enhanced_jaw_split.tif)
 teeth_isolation.png: $(IMAGES:.tif=_cropped_enhanced_teeth_isolation.tif)
 	@echo "--- creating montage for $@"
 	@${MONTAGE} $^ $@
+roi.png: $(IMAGES:.tif=_cropped_enhanced_roi.tif)
+	@echo "--- creating montage for $@"
+	@${MONTAGE} $^ $@
 
 %_cropped.tif: %.tif
 	@echo "--- cropping image $<"
@@ -80,11 +83,13 @@ teeth_isolation.png: $(IMAGES:.tif=_cropped_enhanced_teeth_isolation.tif)
 	@echo "--- visualizing incisors for $<"
 	@${PYTHON} src/visualize_teeth_isolation.py $^ $@
 
-results/histograms:
-	@mkdir -p $@
+%_roi.mat: %_teeth_isolation.mat
+	@echo "--- creating ROI from $<"
+	@${PYTHON} src/roi.py $< $@
 
-results/${SRC_DIR}:
-	@mkdir -p $@
+%_roi.tif: %.tif %_jaw_split.mat %_teeth_isolation.mat %_roi.mat
+	@echo "--- visualizing ROI for $<"
+	@${PYTHON} src/visualize_roi.py $^ $@
 
 ${REPORT}:
 	@(cd report; \
