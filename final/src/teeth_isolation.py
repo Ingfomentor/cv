@@ -47,8 +47,8 @@ def create_spline_histogram(image, tck, target=0):
   x, y  = sample_lines(lines)
   intensities = np.zeros(width)
   for l in xs:
-    lx = np.array(x[l])
-    ly = np.array(y[l])
+    lx = np.array(x[l]).clip(0,width-1)
+    ly = np.array(y[l]).clip(0,height-1)
 
     # extract the values along the line and sum them
     intensities[l] = np.sum(image[ly, lx])
@@ -130,16 +130,19 @@ def determine_perpendiculars_to_spline(tck, xs, y_target, max_x):
     
   return lines
 
-def show(image, spline, lines_upper, lines_lower):
+def show(image, spline_upper, lines_upper, spline_lower, lines_lower):
   '''
   Shows the original and the annotated image
   @param image to draw onto
-  @param spline to draw onto image
-  @param lines to draw onto image
+  @param spline_upper to draw onto image
+  @param lines_upper to draw onto image
+  @param spline_lower to draw onto image
+  @param lines_lower to draw onto image
   '''
   
   # show segments
-  annotated = draw_spline(image, spline)
+  annotated = draw_spline(image, spline_upper)
+  annotated = draw_spline(annotated, spline_lower)
   annotated = draw_teeth_separations(annotated, lines_upper, [255,0,0])
   annotated = draw_teeth_separations(annotated, lines_lower, [255,255,0])
   cv2.imshow("isolated", annotated)
@@ -195,17 +198,20 @@ if __name__ == '__main__':
   # load previously detected jaw/spline data
   data = repo.get_data(input_file)
   # reconstruct spline/tck tuple
-  spline = (data['spline_t'], data['spline_c'], data['spline_k'])
+  spline_upper = (data['spline_upper_t'], data['spline_upper_c'], data['spline_upper_k'])
+  spline_lower = (data['spline_lower_t'], data['spline_lower_c'], data['spline_lower_k'])
 
   # detect splits in slices and create an interpollating spline
-  histogram_upper = create_spline_histogram(image, spline, target=500)
+  histogram_upper = create_spline_histogram(image, spline_upper, target=500)
   splits_upper    = find_centered_valleys(histogram_upper, 5)
-  lines_upper     = determine_perpendiculars_to_spline(spline, splits_upper, 
+  lines_upper     = determine_perpendiculars_to_spline(spline_upper,
+                                                       splits_upper, 
                                                        500, width-1)
   
-  histogram_lower = create_spline_histogram(image, spline, target=900)
+  histogram_lower = create_spline_histogram(image, spline_lower, target=900)
   splits_lower    = find_centered_valleys(histogram_lower, 5)
-  lines_lower     = determine_perpendiculars_to_spline(spline, splits_lower,
+  lines_lower     = determine_perpendiculars_to_spline(spline_lower,
+                                                       splits_lower,
                                                        900, width-1)
 
   if output_file != None:
@@ -217,4 +223,4 @@ if __name__ == '__main__':
                                             'lines'    : lines_lower }
                                } )
   else:
-    show(image, spline, lines_upper, lines_lower)
+    show(image, spline_upper, lines_upper, spline_lower, lines_lower)

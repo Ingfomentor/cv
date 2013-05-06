@@ -28,11 +28,18 @@ assert image.dtype == "uint8"
 
 # retrieve data
 data = repo.get_data(data_file)
-splits = data['splits']
-# reconstruct spline/tck tuple
-spline = (data['spline_t'], data['spline_c'], data['spline_k'])
 
-annotated = draw_splits(image,     splits)
-annotated = draw_spline(annotated, spline)
+splits_upper = data['splits_upper']
+# reconstruct spline/tck tuple
+spline_upper = (data['spline_upper_t'], data['spline_upper_c'], data['spline_upper_k'])
+
+splits_lower = data['splits_lower']
+# reconstruct spline/tck tuple
+spline_lower = (data['spline_lower_t'], data['spline_lower_c'], data['spline_lower_k'])
+
+annotated = draw_splits(image,     splits_upper)
+annotated = draw_spline(annotated, spline_upper)
+annotated = draw_splits(annotated, splits_lower)
+annotated = draw_spline(annotated, spline_lower)
 
 repo.put_image(output_file, annotated)

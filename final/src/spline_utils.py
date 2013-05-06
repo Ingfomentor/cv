@@ -9,7 +9,7 @@ import numpy as np
 from scipy import interpolate
 
 
-def draw_spline(image, tck):
+def draw_spline(image, tck, color = [255,0,0]):
   '''
   Draws a spline on an image given tck parameters
   @param image to draw on
@@ -26,10 +26,10 @@ def draw_spline(image, tck):
   ys = interpolate.splev(xs, tck, der=0).astype(np.int).clip(0,height-3)
 
   # poor-mans's 5px wide (high) curve drawing
-  image[ys-2,xs,:] = [255,0,0]
-  image[ys-1,xs,:] = [255,0,0]
-  image[ys,  xs,:] = [255,0,0]
-  image[ys+1,xs,:] = [255,0,0]
-  image[ys+2,xs,:] = [255,0,0]
+  image[ys-2,xs,:] = color
+  image[ys-1,xs,:] = color
+  image[ys,  xs,:] = color
+  image[ys+1,xs,:] = color
+  image[ys+2,xs,:] = color
   
   return image

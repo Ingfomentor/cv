@@ -63,6 +63,10 @@ roi.png: $(IMAGES:.tif=_crp_enh_roi.tif)
 	@echo "--- visualizing histogram $<"
 	@${OCTAVE} --eval "plot_histogram( '$<', '$@');" > /dev/null
 
+%_jaw_split_histograms.eps: %_jaw_split.mat
+	@echo "--- visualizing jaw split histograms $<"
+	@${OCTAVE} --eval "plot_jaw_histograms( '$<', '$@');" > /dev/null
+
 %_enh.tif: %.tif %_histogram.mat
 	@echo "--- creating enhanced version of $<"
 	@${PYTHON} src/create_enhanced_image.py $^ $@

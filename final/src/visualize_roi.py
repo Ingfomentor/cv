@@ -34,7 +34,8 @@ assert image.dtype == "uint8"
 # retrieve data
 jaw_data = repo.get_data(jaw_data_file)
 # reconstruct spline/tck tuple
-spline = (jaw_data['spline_t'], jaw_data['spline_c'], jaw_data['spline_k'])
+spline_upper = (jaw_data['spline_upper_t'], jaw_data['spline_upper_c'], jaw_data['spline_upper_k'])
+spline_lower = (jaw_data['spline_lower_t'], jaw_data['spline_lower_c'], jaw_data['spline_lower_k'])
 
 teeth_data = repo.get_data(teeth_data_file)
 lines_upper = teeth_data['upper']['lines'].tolist()
@@ -44,7 +45,8 @@ roi_data = repo.get_data(roi_data_file)
 roi_upper = roi_data['upper']
 roi_lower = roi_data['lower']
 
-annotated = draw_spline(image, spline)
+annotated = draw_spline(image, spline_upper)
+annotated = draw_spline(annotated, spline_lower)
 annotated = draw_teeth_separations(annotated, lines_upper, [255,0,0])
 annotated = draw_teeth_separations(annotated, lines_lower, [255,255,0])
 annotated = draw_roi(annotated, roi_upper, (255,0,255))

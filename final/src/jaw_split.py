@@ -47,38 +47,66 @@ def detect_splits(image, slices, expected_split, rho, inversion_top):
   current_split = slices / 2   # 7 / 2 = 3 == middle (0..6)
   histogram = create_histogram_for_slice(image, current_split * slice_width, 
                                          slice_width, prev_split, rho, inversion_top)
-  # find lowest value = jaw separation split
-  split = np.argmin(histogram)
+  # find "edges" of jaw split
+  split_upper, split_lower = find_split_edges(histogram)
   
   # go left and right, collecting subsequent splits, close to this middle one
-  prev_left_split  = split
-  prev_right_split = split
-  splits           = np.array([split])
-  histograms       = np.array([histogram])
+  histograms                = np.zeros([slices, height])
+  histograms[current_split] = histogram
+  prev_left_split_upper     = split_upper
+  prev_right_split_upper    = split_upper
+  prev_left_split_lower     = split_lower
+  prev_right_split_lower    = split_lower
+  splits_upper              = np.array([split_upper])
+  splits_lower              = np.array([split_lower])
   while current_split > 0:
     current_split = current_split - 1
 
     # go left
     histogram = create_histogram_for_slice(image, current_split * slice_width,
-                                           slice_width, prev_left_split,
+                                           slice_width, 
+                                           (prev_left_split_upper + prev_left_split_lower)/2,
                                            rho, inversion_top)
-    split     = np.argmin(histogram)
+    histograms[current_split] = histogram
 
-    prev_left_split = split
-    splits          = np.insert(splits, 0, split)
-    histograms      = np.insert(histograms, 0, histogram)
+    split_upper, split_lower = find_split_edges(histogram)
+
+    prev_left_split_upper     = split_upper
+    prev_left_split_lower     = split_lower
+    splits_upper              = np.insert(splits_upper, 0, split_upper)
+    splits_lower              = np.insert(splits_lower, 0, split_lower)
     
     # and right
     histogram = create_histogram_for_slice(image, (slices - 1 - current_split) * slice_width, 
-                                           slice_width, prev_right_split,
+                                           slice_width,
+                                           (prev_right_split_upper + prev_right_split_lower)/2,
                                            rho, inversion_top)
-    split     = np.argmin(histogram)
-    
-    prev_right_split = split
-    splits           = np.append(splits, split)
-    histograms       = np.append(histograms, histogram)
+    histograms[(slices - 1 - current_split)] = histogram
 
-  return (splits, histograms)
+    split_upper, split_lower = find_split_edges(histogram)
+    
+    prev_right_split_upper    = split_upper
+    prev_right_split_lower    = split_lower
+    splits_upper              = np.append(splits_upper, split_upper)
+    splits_lower              = np.append(splits_lower, split_lower)
+
+  return (histograms, splits_upper, splits_lower)
+
+def find_split_edges(histogram):
+  # find lowest value = deepest jaw separation split
+  split = np.argmin(histogram)
+    
+  # find upper edge
+  split_upper = split
+  while abs( np.average(histogram[split_upper-15:split_upper-10])) - histogram[split_upper] < 100:
+    split_upper = split_upper - 1
+  
+  # find lower edge
+  split_lower = split
+  while abs( np.average(histogram[split_lower+10:split_lower+15])) - histogram[split_lower] < 100:
+    split_lower = split_lower + 1
+  
+  return (split_upper, split_lower)
 
 def create_histogram_for_slice(image, left, width, expected, rho, inversion_top):
   '''
@@ -155,16 +183,20 @@ def interpolate_spline(splits, slice_width):
   
   return tck
 
-def show(image, splits, histograms, spline):
+def show(image, histograms, splits_upper, spline_upper, splits_lower, spline_lower):
   '''
   Shows the image, the splits and the spline.
   @param image to show
-  @param splits to show
   @param histograms to show
-  @param spline to show
+  @param splits_upper to show
+  @param spline_upper to show
+  @param splits_lower to show
+  @param spline_lower to show
   '''
-  annotated = draw_splits(image,     splits)
-  annotated = draw_spline(annotated, spline)
+  annotated = draw_splits(image,     splits_upper)
+  annotated = draw_splits(annotated, splits_lower)
+  annotated = draw_spline(annotated, spline_upper)
+  annotated = draw_spline(annotated, spline_lower)
   cv2.imshow("jaw split", annotated)
   cv2.waitKey(0)
 
@@ -227,15 +259,21 @@ if __name__ == '__main__':
   slice_width = width / slices
 
   # detect splits in slices and create an interpollating spline
-  (splits, histograms) = detect_splits(image, slices, expected_split, rho, inversion_top)
-  spline = interpolate_spline(splits, slice_width)
+  histograms, splits_upper, splits_lower = \
+    detect_splits(image, slices, expected_split, rho, inversion_top)
+  spline_upper = interpolate_spline(splits_upper, slice_width)
+  spline_lower = interpolate_spline(splits_lower, slice_width)
 
   if output_file != None:
-    repo.put_data(output_file, { 'splits'    : splits, 
-                                 'histograms': histograms,
-                                 'spline_t'  : spline[0],
-                                 'spline_c'  : spline[1],
-                                 'spline_k'  : spline[2]
+    repo.put_data(output_file, { 'histograms'     : histograms,
+                                 'splits_upper'   : splits_upper, 
+                                 'spline_upper_t' : spline_upper[0],
+                                 'spline_upper_c' : spline_upper[1],
+                                 'spline_upper_k' : spline_upper[2],
+                                 'splits_lower'   : splits_lower, 
+                                 'spline_lower_t' : spline_lower[0],
+                                 'spline_lower_c' : spline_lower[1],
+                                 'spline_lower_k' : spline_lower[2]
                                })
   else:
-    show(image, splits, histograms, spline)
+    show(image, histograms, splits_upper, spline_upper, splits_lower, spline_lower)

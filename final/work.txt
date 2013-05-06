@@ -43,3 +43,6 @@
 
 3/5 = 1h
 - find enclosing rectangles/ROI (completed) (1h)
+
+6/5 = 3h
+- implemented double jaw_split (upper/lower) (3h)
