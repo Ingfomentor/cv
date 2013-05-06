@@ -25,7 +25,7 @@ OCTAVE=/opt/local/bin/octave --silent \
                              --eval "addpath(strcat(pwd,'/src'));" \
                              --eval "warning('off', 'print:missing_fig2dev');" \
                              --eval "warning('off', 'print:missing_pstoedit');"
-MONTAGE=montage -label "%f" -geometry 150x220>+4+3
+MONTAGE=montage -label "%f" -geometry "140x220>+4+3"
 
 SRC_DIR=images
 IMAGES=$(notdir $(wildcard ${SRC_DIR}/*.tif))
