@@ -18,7 +18,7 @@ from scipy import interpolate
 from peakdet import peakdet
 
 import repository as repo
-from spline_utils import draw_spline
+from spline_utils import draw_spline, reconstruct_spline_tuple
 from teeth_isolation import draw_teeth_separations
 
 
@@ -119,8 +119,8 @@ if __name__ == '__main__':
     # load previously detected jaw/spline data
     jaw_data = repo.get_data(jaw_data_file)
     # reconstruct spline/tck tuple
-    spline_upper = (jaw_data['spline_upper_t'], jaw_data['spline_upper_c'], jaw_data['spline_upper_k'])
-    spline_lower = (jaw_data['spline_lower_t'], jaw_data['spline_lower_c'], jaw_data['spline_lower_k'])
+    spline_upper = reconstruct_spline_tuple(jaw_data, 'upper')
+    spline_lower = reconstruct_spline_tuple(jaw_data, 'lower')
   else:
     teeth_data_file = sys.argv[1]
     output_file     = sys.argv[2]
@@ -138,7 +138,8 @@ if __name__ == '__main__':
   lower_teeth, angles_lower = create_roi(lower_lines) 
 
   if output_file != None:
-    repo.put_data(output_file, { 'upper': upper_teeth, 'lower': lower_teeth,
+    repo.put_data(output_file, { 'teeth_upper' : upper_teeth,
+                                 'teeth_lower' : lower_teeth,
                                  'angles_upper': angles_upper,
                                  'angles_lower': angles_lower } )
   else:

@@ -24,7 +24,7 @@ from scipy import interpolate
 from peakdet import peakdet
 
 import repository as repo
-from spline_utils import draw_spline
+from spline_utils import draw_spline, reconstruct_spline_tuple
 
 
 def create_spline_histogram(image, tck, target=0):
@@ -198,8 +198,8 @@ if __name__ == '__main__':
   # load previously detected jaw/spline data
   data = repo.get_data(input_file)
   # reconstruct spline/tck tuple
-  spline_upper = (data['spline_upper_t'], data['spline_upper_c'], data['spline_upper_k'])
-  spline_lower = (data['spline_lower_t'], data['spline_lower_c'], data['spline_lower_k'])
+  spline_upper = reconstruct_spline_tuple(data, 'upper')
+  spline_lower = reconstruct_spline_tuple(data, 'lower')
 
   # detect splits in slices and create an interpollating spline
   histogram_upper = create_spline_histogram(image, spline_upper, target=500)

@@ -33,3 +33,14 @@ def draw_spline(image, tck, color = [255,0,0]):
   image[ys+2,xs,:] = color
   
   return image
+
+def reconstruct_spline_tuple(data, loc):
+  '''
+  Reconstructs spline TCK tuple from encoded data array.
+  @param data to reconstruct from
+  @param loc upper or lower (string)
+  @return TCK tuple
+  '''
+  return ( data['spline_' + loc + '_t'], 
+           data['spline_' + loc + '_c'],
+           data['spline_' + loc + '_k'] )

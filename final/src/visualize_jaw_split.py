@@ -9,7 +9,7 @@ import sys
 
 import repository as repo
 
-from spline_utils import draw_spline
+from spline_utils import draw_spline, reconstruct_spline_tuple
 from jaw_split import draw_splits
 
 
@@ -30,12 +30,10 @@ assert image.dtype == "uint8"
 data = repo.get_data(data_file)
 
 splits_upper = data['splits_upper']
-# reconstruct spline/tck tuple
-spline_upper = (data['spline_upper_t'], data['spline_upper_c'], data['spline_upper_k'])
-
 splits_lower = data['splits_lower']
 # reconstruct spline/tck tuple
-spline_lower = (data['spline_lower_t'], data['spline_lower_c'], data['spline_lower_k'])
+spline_upper = reconstruct_spline_tuple(data, 'upper')
+spline_lower = reconstruct_spline_tuple(data, 'lower')
 
 annotated = draw_splits(image,     splits_upper)
 annotated = draw_spline(annotated, spline_upper)

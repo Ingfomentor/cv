@@ -11,7 +11,7 @@ import numpy as np
 
 import repository as repo
 
-from spline_utils import draw_spline
+from spline_utils import draw_spline, reconstruct_spline_tuple
 from teeth_isolation import draw_teeth_separations
 
 
@@ -32,8 +32,8 @@ assert image.dtype == "uint8"
 # retrieve data
 jaw_data = repo.get_data(jaw_data_file)
 # reconstruct spline/tck tuple
-spline_upper = (jaw_data['spline_upper_t'], jaw_data['spline_upper_c'], jaw_data['spline_upper_k'])
-spline_lower = (jaw_data['spline_lower_t'], jaw_data['spline_lower_c'], jaw_data['spline_lower_k'])
+spline_upper = reconstruct_spline_tuple(jaw_data, 'upper')
+spline_lower = reconstruct_spline_tuple(jaw_data, 'lower')
 
 teeth_data = repo.get_data(teeth_data_file)
 lines_upper = teeth_data['upper']['lines'].tolist()
