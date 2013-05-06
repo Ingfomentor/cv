@@ -34,16 +34,17 @@ def create_roi(lines):
   ROI.
   '''
   
-  teeth = []
+  teeth  = []
+  angles = []
   for t in range(4):
     # tooth t == left-most (lower left, upper left, upper right, lower right)
     tooth = np.array([ [lines[t][0], lines[t][1]], [lines[t][2], lines[t][3]],
                        [lines[t+1][2], lines[t+1][3]], [lines[t+1][0], lines[t+1][1]] ])
     # detect angle of base
     angle = - get_angle(tooth[0], tooth[3])
+    angles.append(angle)
 
-    rotation_matrix = np.array( [ [ math.cos(angle), - math.sin(angle) ],
-                                  [ math.sin(angle),   math.cos(angle) ] ] )
+    rotation_matrix = get_rotation_matrix(angle)
   
     tooth = np.dot(tooth, rotation_matrix.T)
   
@@ -58,15 +59,10 @@ def create_roi(lines):
     else:                                         # lower jaw
       tooth[1][1] = max(tooth[1][1], tooth[2][1]) # left top  y
     tooth[2][1] = tooth[1][1]                     # right top y
-
-    angle = - angle
-
-    rotation_matrix = np.array( [ [ math.cos(angle), - math.sin(angle) ],
-                                  [ math.sin(angle),   math.cos(angle) ] ] )
   
-    teeth.append(np.dot(tooth, rotation_matrix.T))
+    teeth.append(tooth)
   
-  return teeth
+  return teeth, angles
 
 def get_angle(pt1, pt2):
   dx = pt2[0] - pt1[0]
@@ -74,18 +70,25 @@ def get_angle(pt1, pt2):
 
   return atan2(dy, dx)
 
-def show(image, spline, upper_lines, lower_lines, upper_teeth, lower_teeth):
-  annotated = draw_spline(image, spline)
+def get_rotation_matrix(angle):
+  return np.array( [ [ math.cos(angle), - math.sin(angle) ],
+                     [ math.sin(angle),   math.cos(angle) ] ] )
+
+def show(image, spline_upper, upper_lines, upper_teeth, angles_upper, spline_lower, lower_lines, lower_teeth, angles_lower):
+  annotated = draw_spline(image, spline_upper)
+  annotated = draw_spline(annotated, spline_lower)
   annotated = draw_teeth_separations(annotated, upper_lines, [255,0,0])
   annotated = draw_teeth_separations(annotated, lower_lines, [255,255,0])
-  annotated = draw_roi(annotated, upper_teeth, (255,0,255))
-  annotated = draw_roi(annotated, lower_teeth, (0,255,255))
+  annotated = draw_roi(annotated, upper_teeth, angles_upper, (255,0,255))
+  annotated = draw_roi(annotated, lower_teeth, angles_lower, (0,255,255))
+
   cv2.imshow("ROI", annotated)
   cv2.waitKey(0)
   
-def draw_roi(image, rois, color):
+def draw_roi(image, rois, angles, color):
   annotated = np.copy(image)
-  for roi in rois:
+  for index, roi in enumerate(rois):
+    roi = np.dot(roi, get_rotation_matrix(- angles[index]).T)
     cv2.line(annotated, tuple(roi[0].astype(np.int)), tuple(roi[1].astype(np.int)), color, 2)
     cv2.line(annotated, tuple(roi[1].astype(np.int)), tuple(roi[2].astype(np.int)), color, 2)
     cv2.line(annotated, tuple(roi[2].astype(np.int)), tuple(roi[3].astype(np.int)), color, 2)
@@ -116,7 +119,8 @@ if __name__ == '__main__':
     # load previously detected jaw/spline data
     jaw_data = repo.get_data(jaw_data_file)
     # reconstruct spline/tck tuple
-    spline = (jaw_data['spline_t'], jaw_data['spline_c'], jaw_data['spline_k'])
+    spline_upper = (jaw_data['spline_upper_t'], jaw_data['spline_upper_c'], jaw_data['spline_upper_k'])
+    spline_lower = (jaw_data['spline_lower_t'], jaw_data['spline_lower_c'], jaw_data['spline_lower_k'])
   else:
     teeth_data_file = sys.argv[1]
     output_file     = sys.argv[2]
@@ -130,10 +134,13 @@ if __name__ == '__main__':
   # teeth are counted from left to right 1..4, for upper and lower jaw and are
   # represented by a list of four tuples: [(x,y),(x,y),(x,y),(x,y)], one for
   # each corner of the circumscribed rectangle
-  upper_teeth = create_roi(upper_lines)
-  lower_teeth = create_roi(lower_lines) 
+  upper_teeth, angles_upper = create_roi(upper_lines)
+  lower_teeth, angles_lower = create_roi(lower_lines) 
 
   if output_file != None:
-    repo.put_data(output_file, { 'upper': upper_teeth, 'lower': lower_teeth } )
+    repo.put_data(output_file, { 'upper': upper_teeth, 'lower': lower_teeth,
+                                 'angles_upper': angles_upper,
+                                 'angles_lower': angles_lower } )
   else:
-    show(image, spline, upper_lines, lower_lines, upper_teeth, lower_teeth)
+    show(image, spline_upper, upper_lines, upper_teeth, angles_upper, 
+                spline_lower, lower_lines, lower_teeth, angles_lower)
