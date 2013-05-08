@@ -7,7 +7,6 @@ Creates a rectangular ROI around the isolated teeth.
 
 import sys
 import math
-from math import atan2
 
 import cv2
 import cv2.cv as cv
@@ -20,6 +19,7 @@ from peakdet import peakdet
 import repository as repo
 from spline_utils import draw_spline, reconstruct_spline_tuple
 from teeth_isolation import draw_teeth_separations
+from rotation import get_angle, get_rotation_matrix
 
 
 def create_roi(lines):
@@ -30,8 +30,7 @@ def create_roi(lines):
   All four points, defined by the isolation lines, are rotated until the two
   points on the spline are perpendicular to the X-axis. A simple rectangle can
   be constructed then, containing all points. This rectangle is again rotated
-  over the same, now negative, angle, to obtain the four corners of the actual
-  ROI.
+  over the same, inverse, angle, to obtain the four corners of the actual ROI.
   '''
   
   teeth  = []
@@ -64,15 +63,6 @@ def create_roi(lines):
   
   return teeth, angles
 
-def get_angle(pt1, pt2):
-  dx = pt2[0] - pt1[0]
-  dy = pt2[1] - pt1[1]
-
-  return atan2(dy, dx)
-
-def get_rotation_matrix(angle):
-  return np.array( [ [ math.cos(angle), - math.sin(angle) ],
-                     [ math.sin(angle),   math.cos(angle) ] ] )
 
 def show(image, spline_upper, upper_lines, upper_teeth, angles_upper, spline_lower, lower_lines, lower_teeth, angles_lower):
   annotated = draw_spline(image, spline_upper)
