@@ -27,7 +27,7 @@ import repository as repo
 from spline_utils import draw_spline, reconstruct_spline_tuple
 
 
-def create_spline_histogram(image, tck, target=0):
+def create_spline_histogram(image, tck, length=0):
   '''
   Creates a histogram based on lines orthogonal to a spline function.
   @param image to sample from
@@ -36,14 +36,10 @@ def create_spline_histogram(image, tck, target=0):
   '''
   height, width, _ = image.shape
   
-  # sanitize target value
-  if target < 0: target = 0
-  if target >= height: target = height - 1
-
   # construct lines from spline to point at target height and compute intensity
   # along those lines
   xs    = np.arange(width)
-  lines = determine_perpendiculars_to_spline(tck, xs, target, width)
+  lines = determine_perpendiculars_to_spline(tck, xs, length, width)
   x, y  = sample_lines(lines)
   intensities = np.zeros(width)
   for l in xs:
@@ -99,7 +95,7 @@ def find_valleys(histogram, drop_pct, center):
   centers = min(range(len(valleys)), key=lambda i: abs(valleys[i,0]-center))
   return (valleys, centers)
 
-def determine_perpendiculars_to_spline(tck, xs, y_target, max_x):
+def determine_perpendiculars_to_spline(tck, xs, length, max_x):
   '''
   Computes lines, perpendicular to a given spline at given X-values, up to a
   given y_target, staying within a boundary up to max_x.
@@ -117,14 +113,27 @@ def determine_perpendiculars_to_spline(tck, xs, y_target, max_x):
   for c in range(len(xs)):
     x1 = xs[c]
     y1 = ys[c]
-    y2 = y_target
+
     # slope of orthogonal line to derivative
-    a  = -1 / yder[c]    
-    x2 = ((y2 - y1)/a) + x1
+    m  = -1 / yder[c]
+    
+    # we need to correct for the direction we want to go (length up=-/down=+)
+    if (length < 0 and m < 0) or (length > 0 and m < 0):
+      correction = -1
+    else:
+      correction = 1
+
+    co = 1 / math.sqrt(1+m**2) * correction
+    si = m / math.sqrt(1+m**2) * correction
+    
+    y2 =  y1 + length * si 
+    x2 =  x1 + length * co
+
     # make sure we stay within boundaries
     while (x2 < 0) or (x2 > max_x):
-      y2 = y2 + (1 if y_target < y1 else - 1)
-      x2 = ((y2 - y1)/a) + x1
+      y2 = y2 + (1 if y2 < y1 else - 1)
+      x2 = ((y2 - y1)/m) + x1
+
     # add line tuple to list
     lines.append( (int(x1), int(y1), int(x2), int(y2)) )
     
@@ -175,19 +184,22 @@ if __name__ == '__main__':
   output_file = None
 
   # obtain arguments
-  if len(sys.argv) < 3:
+  if len(sys.argv) < 5:
     print "!!! Missing arguments, please provide:\n" + \
-          "    - an image\n   - jaw split data\n"
+          "    - an image\n    - jaw split data\n" + \
+          "    - upper & lower dental length\n"
     sys.exit(2)
 
   # mandatory
   image_file     = sys.argv[1]
   input_file     = sys.argv[2]
+  upper_length   = int(sys.argv[3]) * -1
+  lower_length   = int(sys.argv[4])
 
   # one more is an output file
-  if len(sys.argv) > 3:
-    output_file    = sys.argv[3]
-  
+  if len(sys.argv) > 5:
+    output_file    = sys.argv[5]
+
   # read image (this should be a grayscale image)
   image = repo.get_image(image_file)
   assert image.dtype == "uint8"
@@ -202,17 +214,28 @@ if __name__ == '__main__':
   spline_lower = reconstruct_spline_tuple(data, 'lower')
 
   # detect splits in slices and create an interpollating spline
-  histogram_upper = create_spline_histogram(image, spline_upper, target=500)
+  histogram_upper = create_spline_histogram(image, spline_upper,
+                                            length=upper_length)
+
   splits_upper    = find_centered_valleys(histogram_upper, 5)
+  # when we can't find 5 splits / 4 teeth, we need to lower the length of the
+  # teeth (case for 29)
+  while len(splits_upper) < 5:
+    upper_length = upper_length + 50
+    histogram_upper = create_spline_histogram(image, spline_upper,
+                                              length=upper_length)
+    splits_upper = find_centered_valleys(histogram_upper, 5)
+    
   lines_upper     = determine_perpendiculars_to_spline(spline_upper,
                                                        splits_upper, 
-                                                       500, width-1)
+                                                       upper_length, width-1)
   
-  histogram_lower = create_spline_histogram(image, spline_lower, target=900)
+  histogram_lower = create_spline_histogram(image, spline_lower,
+                                            length=lower_length)
   splits_lower    = find_centered_valleys(histogram_lower, 5)
   lines_lower     = determine_perpendiculars_to_spline(spline_lower,
                                                        splits_lower,
-                                                       900, width-1)
+                                                       lower_length, width-1)
 
   if output_file != None:
     repo.put_data(output_file, { 'upper': { 'histogram': histogram_upper,

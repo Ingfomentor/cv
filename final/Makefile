@@ -7,6 +7,8 @@ SLICES=5
 EXPECTED_JAW_SPLIT=0.7
 RHO=0.4
 INVERSION_TOP=1.1
+UPPER_LENGTH=350
+LOWER_LENGTH=300
 
 # !!! DON'T change anything below this point (unless you know what you're doing)
 
@@ -81,7 +83,7 @@ roi.png: $(IMAGES:.tif=_crp_enh_roi.tif)
 
 %_teeth_iso.mat: %.tif %_jaw_split.mat
 	@echo "--- isolating incisors for $<"
-	@${PYTHON} src/teeth_isolation.py $^ $@
+	@${PYTHON} src/teeth_isolation.py $^ ${UPPER_LENGTH} ${LOWER_LENGTH} $@
 
 %_teeth_iso.tif: %.tif %_jaw_split.mat %_teeth_iso.mat
 	@echo "--- visualizing incisors for $<"

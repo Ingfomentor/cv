@@ -48,3 +48,11 @@
 - implemented double jaw_split (upper/lower) (3h)
 - changed roi data to include angle (30min)
 - extracted reconstruct_spline_tuple (15min)
+- tried to extract rotated rectangular ROI - failed (2h30min)
+
+7/5 = 2h30
+- implemented extraction of rotated rectangular ROI (2h)
+- implemented histogram of extracted ROI (30min)
+
+8/5 = 1h30
+- changed teeth split detection to use length of teeth (1h30)
