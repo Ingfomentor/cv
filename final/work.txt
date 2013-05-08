@@ -54,5 +54,6 @@
 - implemented extraction of rotated rectangular ROI (2h)
 - implemented histogram of extracted ROI (30min)
 
-8/5 = 1h30
+8/5 = 2h30
 - changed teeth split detection to use length of teeth (1h30)
+- changed ROI format and corrected computation (1h)

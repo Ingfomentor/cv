@@ -34,19 +34,18 @@ def create_roi(lines):
   '''
   
   teeth  = []
-  angles = []
   for t in range(4):
     # tooth t == left-most (lower left, upper left, upper right, lower right)
     tooth = np.array([ [lines[t][0], lines[t][1]], [lines[t][2], lines[t][3]],
                        [lines[t+1][2], lines[t+1][3]], [lines[t+1][0], lines[t+1][1]] ])
-    # detect angle of base
-    angle = - get_angle(tooth[0], tooth[3])
-    angles.append(angle)
 
-    rotation_matrix = get_rotation_matrix(angle)
+    # detect angle of base and align spline-bound-line to X-axis
+    angle = - get_angle(tooth[0], tooth[3])
+    # the first point of the tooth always needs to stay in place
+    center = tooth[0]
+    tooth = rotate_tooth(tooth, center, angle)
   
-    tooth = np.dot(tooth, rotation_matrix.T)
-  
+    # enlarge the rectangle if needed to contain other two points
     tooth[0][0] = min(tooth[0][0], tooth[1][0])   # left bottom x
     tooth[1][0] = tooth[0][0]                     # left top    x
 
@@ -59,26 +58,38 @@ def create_roi(lines):
       tooth[1][1] = max(tooth[1][1], tooth[2][1]) # left top  y
     tooth[2][1] = tooth[1][1]                     # right top y
   
+    # rotate entire back to its original position
+    tooth = rotate_tooth(tooth, center, -angle)
     teeth.append(tooth)
   
-  return teeth, angles
+  return teeth
 
+def rotate_tooth(tooth, center, angle):
+  rotation_matrix = get_rotation_matrix(angle)
+  # move all points of the tooth and make sure the first point is the center
+  # of rotation now
+  tooth = tooth - center
+  # rotate it ...
+  tooth = np.dot(tooth, rotation_matrix.T)
+  # and move it back
+  tooth = center + tooth
+  
+  return tooth
 
-def show(image, spline_upper, upper_lines, upper_teeth, angles_upper, spline_lower, lower_lines, lower_teeth, angles_lower):
+def show(image, spline_upper, upper_lines, upper_teeth, spline_lower, lower_lines, lower_teeth):
   annotated = draw_spline(image, spline_upper)
   annotated = draw_spline(annotated, spline_lower)
   annotated = draw_teeth_separations(annotated, upper_lines, [255,0,0])
   annotated = draw_teeth_separations(annotated, lower_lines, [255,255,0])
-  annotated = draw_roi(annotated, upper_teeth, angles_upper, (255,0,255))
-  annotated = draw_roi(annotated, lower_teeth, angles_lower, (0,255,255))
+  annotated = draw_roi(annotated, upper_teeth, (255,0,255))
+  annotated = draw_roi(annotated, lower_teeth, (0,255,255))
 
   cv2.imshow("ROI", annotated)
   cv2.waitKey(0)
   
-def draw_roi(image, rois, angles, color):
+def draw_roi(image, rois, color):
   annotated = np.copy(image)
-  for index, roi in enumerate(rois):
-    roi = np.dot(roi, get_rotation_matrix(- angles[index]).T)
+  for roi in rois:
     cv2.line(annotated, tuple(roi[0].astype(np.int)), tuple(roi[1].astype(np.int)), color, 2)
     cv2.line(annotated, tuple(roi[1].astype(np.int)), tuple(roi[2].astype(np.int)), color, 2)
     cv2.line(annotated, tuple(roi[2].astype(np.int)), tuple(roi[3].astype(np.int)), color, 2)
@@ -124,14 +135,12 @@ if __name__ == '__main__':
   # teeth are counted from left to right 1..4, for upper and lower jaw and are
   # represented by a list of four tuples: [(x,y),(x,y),(x,y),(x,y)], one for
   # each corner of the circumscribed rectangle
-  upper_teeth, angles_upper = create_roi(upper_lines)
-  lower_teeth, angles_lower = create_roi(lower_lines) 
+  upper_teeth = create_roi(upper_lines)
+  lower_teeth = create_roi(lower_lines) 
 
   if output_file != None:
     repo.put_data(output_file, { 'teeth_upper' : upper_teeth,
-                                 'teeth_lower' : lower_teeth,
-                                 'angles_upper': angles_upper,
-                                 'angles_lower': angles_lower } )
+                                 'teeth_lower' : lower_teeth } )
   else:
-    show(image, spline_upper, upper_lines, upper_teeth, angles_upper, 
-                spline_lower, lower_lines, lower_teeth, angles_lower)
+    show(image, spline_upper, upper_lines, upper_teeth, 
+                spline_lower, lower_lines, lower_teeth)

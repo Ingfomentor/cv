@@ -45,14 +45,11 @@ roi_data = repo.get_data(roi_data_file)
 roi_upper = roi_data['teeth_upper']
 roi_lower = roi_data['teeth_lower']
 
-angles_upper = roi_data['angles_upper']
-angles_lower = roi_data['angles_lower']
-
 annotated = draw_spline(image, spline_upper)
 annotated = draw_spline(annotated, spline_lower)
 annotated = draw_teeth_separations(annotated, lines_upper, [255,0,0])
 annotated = draw_teeth_separations(annotated, lines_lower, [255,255,0])
-annotated = draw_roi(annotated, roi_upper, angles_upper, (255,0,255))
-annotated = draw_roi(annotated, roi_lower, angles_lower, (0,255,255))
+annotated = draw_roi(annotated, roi_upper, (255,0,255))
+annotated = draw_roi(annotated, roi_lower, (0,255,255))
 
 repo.put_image(output_file, annotated)
