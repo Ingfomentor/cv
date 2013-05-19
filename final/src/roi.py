@@ -14,8 +14,6 @@ import numpy as np
 
 from scipy import interpolate
 
-from peakdet import peakdet
-
 import repository as repo
 from spline_utils import draw_spline, reconstruct_spline_tuple
 from teeth_isolation import draw_teeth_separations
