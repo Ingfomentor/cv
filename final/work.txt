@@ -58,3 +58,22 @@
 - changed teeth split detection to use length of teeth (1h30)
 - changed ROI format and corrected computation (1h)
 - fixed ROI extraction and histogram computation (1h)
+
+17/5 = 8h30
+- find way to define first gaussian component in histogram (8h30min)
+
+18/5 = 3h
+- implemented crown contour tracing (3h)
+
+19/5 = 5h
+- cleaned up crown contour tracing + automation + montage (3h)
+- implemented root contour computation (2h)
+
+---
+total = 64h45
+---
+
+- turn point cloud into actual contour, outliers removed ()
+- report
+- presentation
+- process TODO
