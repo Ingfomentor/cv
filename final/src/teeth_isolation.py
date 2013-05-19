@@ -25,6 +25,7 @@ from peakdet import peakdet
 
 import repository as repo
 from spline_utils import draw_spline, reconstruct_spline_tuple
+from line_utils import sample_lines
 
 
 def create_spline_histogram(image, tck, length=0):
@@ -50,23 +51,6 @@ def create_spline_histogram(image, tck, length=0):
     intensities[l] = np.sum(image[ly, lx])
 
   return intensities
-
-def sample_lines(lines):
-  '''
-  Samples lines (x1,y1,x2,y2) into sets of points.
-  @param lines to be samples
-  @return sets of point coordinates as two sets ([[x]],[[y]])
-  '''
-  x = []
-  y = []
-  for line in lines:
-    # create a line
-    num = 750
-    xs, ys = np.linspace(line[0], line[2], num).astype(np.int), \
-             np.linspace(line[1], line[3], num).astype(np.int)
-    x.append(xs)
-    y.append(ys)
-  return (x,y)
 
 def find_centered_valleys(histogram, amount):
   histogram = histogram / np.max(histogram)   # normalize
