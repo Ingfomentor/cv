@@ -152,13 +152,13 @@ def get_gaussian_values(count, expected, rho):
     values[x] = get_gaussian_value(x, count, expected, rho)
   return values
 
-def get_gaussian_value(x, max_value, expected, rho):
+def get_gaussian_value(x, max_value, expected, sigma):
   '''
   Computes a Gaussian value for a given x value between -1 and 1
   @param x value between -1 and 1
   @param max_value of the values, allows for normalization
   @param expected location = top of Gaussian curve
-  @param rho controls the "peakyness" of the Gaussian curve
+  @param sigma controls the "peakyness" of the Gaussian curve
   @return Gaussian value for x
   '''
   
@@ -166,9 +166,9 @@ def get_gaussian_value(x, max_value, expected, rho):
   x        = ( float(x)        - (float(max_value)/2) ) / float(max_value)
   expected = ( float(expected) - (float(max_value)/2) ) / float(max_value) 
   
-  return ( math.e ** - ( ((x-expected) ** 2) / rho ** 2 ) ) \
+  return ( math.e ** - ( ((x-expected) ** 2) / sigma ** 2 ) ) \
          / \
-         (math.sqrt(2*math.pi) * rho)
+         (math.sqrt(2*math.pi) * sigma)
 
 def interpolate_spline(splits, slice_width):
   '''
