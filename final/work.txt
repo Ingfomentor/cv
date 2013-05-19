@@ -73,8 +73,9 @@
 20/5 =
 - report: document setup + description setup = overview diagram (2h30min)
 - report: introduction, literature, strategie (3h30)
+
 ---
-total = 67h45
+total = 73h45
 ---
 
 - turn point cloud into actual contour, outliers removed ()
