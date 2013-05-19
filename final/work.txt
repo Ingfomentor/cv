@@ -65,12 +65,13 @@
 18/5 = 3h
 - implemented crown contour tracing (3h)
 
-19/5 = 5h
+19/5 = 8h
 - cleaned up crown contour tracing + automation + montage (3h)
 - implemented root contour computation (2h)
+- trying to remove outliers from point cloud - failed (3h)
 
 ---
-total = 64h45
+total = 67h45
 ---
 
 - turn point cloud into actual contour, outliers removed ()
