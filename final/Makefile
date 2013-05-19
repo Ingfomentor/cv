@@ -52,6 +52,9 @@ teeth_iso.png: $(IMAGES:.tif=_crp_enh_teeth_iso.tif)
 roi.png: $(IMAGES:.tif=_crp_enh_roi.tif)
 	@echo "--- creating montage for $@"
 	@${MONTAGE} $^ $@
+contours.png: $(IMAGES:.tif=_crp_enh_contours.tif)
+	@echo "--- creating montage for $@"
+	@${MONTAGE} $^ $@
 
 %_crp.tif: %.tif
 	@echo "--- cropping image $<"
@@ -97,6 +100,14 @@ roi.png: $(IMAGES:.tif=_crp_enh_roi.tif)
 	@echo "--- visualizing ROI for $<"
 	@${PYTHON} src/visualize_roi.py $^ $@
 
+%_contours.mat: %.tif %_roi.mat
+	@echo "--- creating contours for $<"
+	@${PYTHON} src/contours.py $^ $@
+
+%_contours.tif: %.tif %_contours.mat %_roi.mat
+	@echo "--- visualizing contours on $<"
+	@${PYTHON} src/visualize_contours.py $^ $@
+
 ${REPORT}:
 	@(cd report; \
 		export PATH=$$PATH:/usr/local/bin ; \
@@ -117,5 +128,5 @@ clean:
 mrproper: clean
 	@${RM} verslag/verslag.pdf
 
-.PRECIOUS: %_histogram.mat %_histogram.eps %_enh.tif %_jaw_split.mat %_teeth_iso.mat %_roi.mat
-.SECONDARY: %_histogram.mat %_histogram.eps %_enh.tif %_jaw_split.mat %_teeth_iso.mat %_roi.mat
+.PRECIOUS: %_histogram.mat %_histogram.eps %_enh.tif %_jaw_split.mat %_teeth_iso.mat %_roi.mat %_contours.mat
+.SECONDARY: %_histogram.mat %_histogram.eps %_enh.tif %_jaw_split.mat %_teeth_iso.mat %_roi.mat %_contours.mat
