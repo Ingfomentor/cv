@@ -51,44 +51,84 @@
 \vspace{-1cm}
 \section{Introductie}
 
-TODO
+In dit project bestuderen we het segmenteren van snijtanden op basis van radiografie\"en. We vertrekken hierbij van bestaande literatuur, uit de welke een strategie gekozen en ge\"implementeerd wordt. De resultaten van deze implementatie worden besproken in het kader van de cursus.
+
+Dit rapport volgt dezelfde structuur: eerst worden enkele van de geconsulteerde rapporten kort toegelicht. Vervolgens wordt de geselecteerde strategie beschreven. De implementatie wordt tevens kort toegelicht en de uitdagingen die er in vervat zaten geanalyseerd. Tot slot worden de resultaten besproken en worden conclusies getrokken.
+
+De belangrijkste resultaten en code voorbeelden zijn opgenomen in dit rapport, het zij in de tekst, het zij in appendices. Alle broncode die gebruikt werd in de realisatie van de gekozen strategie, is ook online beschikbaar via \url{http://github.com/MyKULCourses/cv} in de folder {\tt final}.
 
 \section{Literatuur studie}
 
-TODO
+Enkele van de aangeboden, alsook andere, zelf gezochte artikels werden verwerkt. In deze sectie vatten we de voorgestelde strategie\"en kort samen.
 
 \subsection{Challenges of Developing an Automated Detail Identification System}
 
-TODO
+In \cite{abdel2003challenges} wordt een strategie voorgesteld die uit twee stappen bestaat: eerst wordt een 2-ledige \emph{thresholding} methode toegepast waarna door middel van integrale projectie de individuele tanden gesegmenteerd worden. Het bepalen van de effectieve contour wordt nauwelijks beschreven en wordt opgenomen in het gedeelte over het vergelijken van de ante- en post-mortem informatie.
 
-\subsection{Hierarchical count our matching for detail X-ray radiographs}
+De 2-ledige \emph{thresholding} methode bestaat uit de toepassing van een iteratieve en een adaptieve drempelwaarde. De iteratieve drempelwaarde wordt ge\"implementeerd aan de hand van een \emph{Canny} rand detectie. De adaptieve drempelwaarde wordt gerealiseerd door middel van morfologische dilatie, toegepast op het binaire randen beeld. Op deze manier worden de pixels rond de randen gevonden. Van de overeenkomstige pixels wordt een gemiddelde grijs-waarde bepaald, die als initi\"ele drempelwaarde gebruikt wordt. Deze waarde zorgt voor een opdeling in tand- en achtergrondgebieden. Via een iteratief proces wordt deze waarde bijgesteld tot ze convergeert.
 
-TODO
+Door het toepassen van een adaptieve drempelwaarde, wordt vervolgens een binaire opdeling gemaakt tussen tanden en achtergrond. Deze drempelwaarde wordt toegepast op het originele beeld dat eerst gemaskeerd wordt met het iteratief bekomen masker.
 
-\subsection{Automatic Construction of Detal Charts for Postmortem Identification}
+Dit binaire beeld vorm vervolgens de basis voor het segmenteren van de individuele tanden. Hier wordt eerst gezocht naar een horizontale splitsing tussen onder- en bovenkaak. Hierbij wordt een minimale som van horizontale intensiteiten gezocht. Aangezien achtergrondgebieden zwart zijn, zal een overwegend zwarte scheidingslijn een zeer lage gesommeerde intensiteit kennen en duiden op een splitsing. Omdat deze horizontale lijn niet altijd mooi horizontaal zal zijn, wordt een rotatie van deze lijn tussen -20 en +20 graden in rekening genomen. Aangezien dit niet altijd mogelijk is, wordt voorgesteld om dit te doen voor verticale deelgebieden.
 
-TODO
+Vertrekkende van deze horizontale splitsing worden de tanden ge\"isoleerd. Hierbij wordt een gelijkaardige methode toegepast en wordt vanaf de horizontale splitsing gezocht naar rechten die loodrecht staan op de splitsing, met opnieuw in acht name van een hook tussen -20 en +20 graden, waarbij de som van de intensiteiten opnieuw minimaal is.
 
-\subsection{Matching of detail X-ray images for human identification}
+Het vervolg van dit artikel focust hoofdzakelijk nog op het opslaan en het terugvinden door vergelijken van de informatie over de individuele tanden.
 
-TODO
+\subsection{Active Contour Based Segmentation of Low-Contrast Medical Images}
 
-\subsection{Automatic feature localisation with constrained local models}
+In \cite{abdel2003challenges} wordt verwezen naar \cite{piotrowski2000active}, een artikel dat in het algemeen het probleem van contour detectie in laag-contrast medische beeldvorming aanpakt. Het artikel beschrijft enkele aspecten: eerst wordt de normalisatie van de originele beelden voorgesteld op basis van het zgn. \emph{contrast stretching}. Vervolgens wordt een initi\"le contour detectie gedaan door middel van Hough transformaties. Aan de hand van een energie functie wordt deze initi\"ele vorm vervolgens verbeterd tot het finale resultaat.
 
-TODO
+Het moet opgemerkt worden dat de segmentatie door toepassing van achtereenvolgens een Sobel filter, een drempelwaarde en Hough transformaties wel een beperking oplegt dat er bv. slechts \'e\'en tand in het beeld aanwezig mag zijn.
 
-\subsection{Robust and Accurate Shape Model Fitting using Random Forest Regression Voting}
+Het minimaliseren van de contour energie wordt gedaan door middel van \emph{simulated annealing} en kent vier fasen:
 
-TODO
+\begin{enumerate}
+\item In de \emph{browsing} fase kan de vorm zeer vrij bewegen, met zeer weinig beperkingen.
+\item Tijdens \emph{setting the macro-state} fase blijven contouren meer gelokaliseerd.
+\item Daarna zal de contour beginnen oscilleren rond de rand van het object.
+\item In de laatste fase, \emph{freezing in de local minimum} wordt door de lage \emph{temperatuur} het simulated annealing proces beperkte tot een \emph{downhill search}.
+\end{enumerate}
 
+\subsection{Tooth Contour Extraction for Matching Dental Radiographs}
+
+De verwijzing naar actieve contouren in algemeen, laag-contrast medische beelden leidde naar \cite{chen2004tooth}, een zeer beknopt artikel waarin een strategie wordt voorgesteld op basis van actieve contour modellen of zgn. \emph{snakes} om specifiek contouren van tanden te bekomen. Omdat hierbij het probleem kan rijzen van interferentie van naburige tanden, stellen ze tevens een nieuwe dynamische energie term voor. Hierbij wordt gebruik gemaakt van gradi‘nt richtingen. In het geval van tanden is dit mogelijk omdat bij een gerichte \emph{snake} de tand steeds aan de linkerkant zal liggen.
+
+Dit artikel verwijst naar \cite{jain2004matching}, een artikel van dezelfde auteurs, en vermeldt dat de daarin voorgestelde strategie op basis van een intensiteiten distributie model, snel zal falen indien de contouren wazig zijn of er zich overlappingen voordoen. Anderzijds wordt de structurele aanpak voor de segmentatie van tanden tevens weerhouden bij de initialisatie fase.
+
+Voor de detectie van de contouren wordt eerst gezocht naar de scheidingslijn tussen tandvlees en achtergrond. Hierdoor worden de kroon en de wortel gescheiden. Vervolgens wordt de methode van \cite{jain2004matching} toegepast om een initi\"ele \emph{snake} te bekomen. Door een convergentie naar de gradi\"ent  wordt dit initi\"ele resultaat verbeterd tot het finale resultaat.
+
+\subsection{Dental X-ray Image Segmentation}
+
+\cite{said2004dental} is een artikel dat duidelijk volgt op \cite{abdel2003challenges} en uitgebreider ingaat op het concept \emph{contrast stretching}, zoals ook beschreven in \cite{piotrowski2000active}.
+
+Initieel kent het artikel een zeer lange beschrijvende inleiding, waarin de context van het segmenteren van tanden uiteen gezet wordt. Vervolgens wordt een methodologie voorgesteld. Een eerste stap bestaat uit het verbeteren van de beelden door middel van \emph{contrast stretching}. Naast de theoretische onderbouw voor \emph{contrast stretching} wordt niet verder ingegaan op de implementatie ervan. Wel wordt aangegeven dat tijdens de voorbereiding van de beelden een \emph{Top-Hat} filter nodig is om het onderscheid tussen tanden en botten mogelijk te maken.
+
+Vervolgens wordt opgemerkt dat voor segmentatie twee strategie\"en kunnen gevolgd worden: enerzijds de extractie op basis van regionale kenmerken en anderzijds op basis van modellen. Deze laatste strategie is complexer, maar dikwijls meer succesvol.
+
+De methodologie gaat tot slot verder met een uitermate sumiere beschrijving van de segmentatie door middel van 2D wavelets en concludeert dat deze aanpak veruit de beste is, in vergelijking met andere aanpakken.
+
+\subsection{Matching of dental X-ray images for human identification}
+
+In \cite{jain2004matching} wordt ook een twee-fasen methodologie voorgesteld: eerst een segmentatie van de individuele tanden en vervolgens een extractie van de effectieve contouren. De auteurs van het artikel geven zelf aan dat hun aanpak waarschijnlijk niet geschikt is voor een volledig automatische verwerking van grote sets en dat fouten in problematische situaties manueel dienen gecorrigeerd te worden. Ook adviseren ze om waar mogelijk manueel een initi\"ele aanduiding te geven van verwachte locaties, zoals voor de splitsing tussen de onder- en bovenkaak. Desalniettemin beschrijven ze een strategie die volledig geautomatiseerd kan worden.
+
+De scheiding van onder- en bovenkaak volgt het principe dat voorgesteld werd in \cite{abdel2003challenges}, en zoekt splitsingen aan de hand van histogrammen van de horizontale en verticale intensiteiten, echter zonder de bijkomende variatie van de hellingsgraad van -20 tot +20 graden. Wel wordt het principe van de verticale banden gehanteerd. De resulterende hoogtes van de splitsingen worden vervolgens als basis genomen om een interpolerende \emph{spline} te bepalen.  Het zoeken van splitsingen tussen individuele tanden wordt vervolgens gedaan volgens rechten die loodrecht staan op deze \emph{spline}. Op basis van deze splitsingen kunnen ROI's bepaald worden die telkens (hoofdzakelijk) \'e\'en tand bedekken. 
+
+Een ROI wordt vervolgens opgedeeld in een kroon en een wortel door middel van het identificeren van een kroon centrum halverwege de breedte en op $\frac{1}{3}$ van de top van de ROI. Via een distributiemodel van intensiteiten wordt vervolgens via een tracering van een halve cirkel de contour van de kroon bepaald. In een volgende fase wordt de wortel verder getraceerd. Hierbij wordt gewerkt met een contrast verschil omdat deze regio veel waziger is wegens de combinatie van tand en kaakbeen dat gelijkaardige intensiteiten oplevert.
+
+De overige helft van het artikel gaat dieper in op het opslaan en vergelijken van ge\"iadentificeerde tanden.
 
 \section{Implementatie strategie}
 
-TODO
+Voor de implementatie van dit project werd uitgegaan van \cite{jain2004matching} als basis algoritme met toepassing van  \emph{contrast stretching} zoals aangegeven in \cite{piotrowski2000active} en verder gedetailleerd in \cite{said2004dental}.
+
+Omdat dit artikel veel geciteerd werd in de andere geconsulteerde werken en omdat het in grote lijnen een andere aanpak beschrijft dan deze die tijdens de lessen van de cursus voorgesteld werd, leek het een interessante opportuniteit om na te gaan hoe deze methodologie effectief kan presteren op basis van een implementatie binnen een kort tijdsbestek.
+
+Vooral de aanpak om een volledige radiografie van een gebit te segmenteren in individuele ROI's wordt meermaals geciteerd. Ook worden enkele complexiteiten uit andere artikels anders opgelost. Zo wordt bv. gebruik gemaakt van een \emph{spline} functie om de splitsing tussen onder- en bovenkaak te beschrijven. Dit in tegenstelling tot de variabele hoek in \cite{abdel2003challenges}.
+
+Zoals aangegeven in \cite{chen2004tooth} verwachten we inderdaad dat er mogelijke problemen zullen optreden bij beelden waarbij de contouren wazig zijn of waar er zich overlappingen voordoen. Dit laatste is niet ongewoon bij vervormingen en komt in een radiografie tot uiting door overlappingen van de beelden van de individuele tanden.
 
 \section{Implementatie}
-
-TODO
 
 \subsection{Setup}
 
@@ -96,7 +136,7 @@ De resulterende code is hoofdzakelijk geschreven in Python, maakt gebruik van de
 
 Voor elke fase of handeling die uitgevoerd wordt, is een apart Python script voorzien. Deze zijn opgezet als modules, maar kunnen ook op zich uitgevoerd worden. In dit laatste geval zal het script zijn functionaliteit uitvoeren en het resultaat interactief laten zien op het scherm. Deze werking wordt geactiveerd indien er geen uitvoerbestand wordt meegegeven aan de oproep.
 
-Indien dit laatste wel wordt gedaan, is dit de naam van een {\tt Matlab} bestand met extensie {\tt .mat}. In plaats van de resultaten te visualiseren, worden deze nu opgeslagen in dit bestand. Deze bestanden worden tevens doorgegeven aan de volgende fase, waardoor er voor elke fase een onafhankelijke set van data- en uitvoer bestanden ontstaan. Het {\tt Matlab} formaat werd gekozen om wille van interoperabiliteit. Zo zijn de scripts om grafieken, zoals histogrammen, te visualiseren gerealiseerd als {\tt Matlab} scripts. Hierdoor zijn deze grafieken in dit verslag visueel conform aan geldende standaarden en kon ervaring op dit valk hergebruikt worden.
+Indien dit laatste wel wordt gedaan, is dit de naam van een {\tt Matlab} bestand met extensie {\tt .mat}. In plaats van de resultaten te visualiseren, worden deze nu opgeslagen in dit bestand. Deze bestanden worden tevens doorgegeven aan de volgende fase, waardoor er voor elke fase een onafhankelijke set van data- en uitvoer bestanden ontstaan. Het {\tt Matlab} formaat werd gekozen om wille van interoperabiliteit. Zo zijn de scripts om grafieken, zoals histogrammen, te visualiseren gerealiseerd als {\tt Matlab} scripts. Hierdoor zijn deze grafieken in dit verslag visueel conform aan geldende standaarden en kon ervaring op dit vlak hergebruikt worden.
 
 Tot slot zijn er naast de interactieve manier om de resultaten te bekijken, ook overeenkomstige Python scripts gemaakt die de visualisatie realiseren naar een bestand.
 
@@ -137,6 +177,18 @@ Dit algoritme bestaat uit 4 fasen. Deze zijn in figuur \ref{fig:setup} weergegev
 
 De opdracht voorziet dat binaire maskeringen aangemaakt worden. Een laatste stap in het proces voorziet de generatie van zulke maskeringen ({\tt create\_masks.py}).
 
+\subsection{Beeld verbetering}
+
+TODO
+
+\subsection{Segmentatie}
+
+TODO
+
+\subsection{Contour bepaling}
+
+TODO
+
 \section{Resultaten}
 
 TODO
@@ -144,6 +196,11 @@ TODO
 \section{Conclusies}
 
 TODO
+
+\bibliographystyle{alpha}
+\bibliography{references}
+
+\newpage
 
 \appendix
 
