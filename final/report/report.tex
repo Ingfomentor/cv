@@ -1,0 +1,165 @@
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage[dutch]{babel}
+\usepackage{url}
+\usepackage{minted}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{amsmath, amsthm, amssymb,amsfonts}
+
+\usepackage[section]{placeins}
+
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\newcommand*\Let[2]{\State #1 $\gets$ #2}
+
+\usepackage{color}
+
+\usepackage{wrapfig}
+
+\usepackage{rotating}
+\usepackage{float}
+
+\usepackage{xypic}
+\usepackage[all,color]{xy}
+\xyoption{all}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhead{}
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0mm}
+\rfoot{\thepage}    
+\cfoot{}
+\lfoot{CV finaal project: Snijtand Segmentatie - Christophe Van Ginneken (s0084580)}
+
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+
+\geometry{a4paper}
+
+\author{Christophe Van Ginneken (s0084580) \\
+	\url{Christophe.VanGinneken@student.kuleuven.be} }
+\title{CV finaal project: Snijtand Segmentatie}
+
+\begin{document}
+
+\maketitle
+
+\vspace{-1cm}
+\section{Introductie}
+
+TODO
+
+\section{Literatuur studie}
+
+TODO
+
+\subsection{Challenges of Developing an Automated Detail Identification System}
+
+TODO
+
+\subsection{Hierarchical count our matching for detail X-ray radiographs}
+
+TODO
+
+\subsection{Automatic Construction of Detal Charts for Postmortem Identification}
+
+TODO
+
+\subsection{Matching of detail X-ray images for human identification}
+
+TODO
+
+\subsection{Automatic feature localisation with constrained local models}
+
+TODO
+
+\subsection{Robust and Accurate Shape Model Fitting using Random Forest Regression Voting}
+
+TODO
+
+
+\section{Implementatie strategie}
+
+TODO
+
+\section{Implementatie}
+
+TODO
+
+\subsection{Setup}
+
+De resulterende code is hoofdzakelijk geschreven in Python, maakt gebruik van de OpenCV, NumPy en SciPy bibliotheken. Daarnaast werd geopteerd om de co\"ordinatie en aansturing van deze code te doen vanuit een doel-geori\"enteerde {\tt Makefile}. Hierdoor is er een sterke scheiding tussen configuratie en aansturing enerzijds en algoritme en uitvoering anderzijds. Zaken als bepalen welke bestanden geladen moeten worden of welke logica dient uitgevoerd te worden is op deze manier gecentraliseerd en niet verspreid over de verschillende Python bestanden.
+
+Voor elke fase of handeling die uitgevoerd wordt, is een apart Python script voorzien. Deze zijn opgezet als modules, maar kunnen ook op zich uitgevoerd worden. In dit laatste geval zal het script zijn functionaliteit uitvoeren en het resultaat interactief laten zien op het scherm. Deze werking wordt geactiveerd indien er geen uitvoerbestand wordt meegegeven aan de oproep.
+
+Indien dit laatste wel wordt gedaan, is dit de naam van een {\tt Matlab} bestand met extensie {\tt .mat}. In plaats van de resultaten te visualiseren, worden deze nu opgeslagen in dit bestand. Deze bestanden worden tevens doorgegeven aan de volgende fase, waardoor er voor elke fase een onafhankelijke set van data- en uitvoer bestanden ontstaan. Het {\tt Matlab} formaat werd gekozen om wille van interoperabiliteit. Zo zijn de scripts om grafieken, zoals histogrammen, te visualiseren gerealiseerd als {\tt Matlab} scripts. Hierdoor zijn deze grafieken in dit verslag visueel conform aan geldende standaarden en kon ervaring op dit valk hergebruikt worden.
+
+Tot slot zijn er naast de interactieve manier om de resultaten te bekijken, ook overeenkomstige Python scripts gemaakt die de visualisatie realiseren naar een bestand.
+
+De hele setup is visueel weergegeven in figuur \ref{fig:setup}: van boven naar onder is de implementatie strategie stap voor stap weergegeven in de vorm van rechthoeken met de naam van het overeenkomstige Python of Octave script. Verticale pijlen duiden de logische opeenvolging aan en geven tevens aan welke bestanden uit een vorige fase gebruikt worden om verder te gaan. Horizontale pijlen geven de mogelijkheden tot visualisatie.
+
+\begin{figure}
+\centering
+\[ \entrymodifiers={+++[F-]}
+\SelectTips{cm}{}
+\xymatrix {
+	*{origineel} 										\ar[d]_{\tt 01.tif} \\
+	\parbox{3.75cm}{\centering crop\_image.py} 					\ar[d]_{\tt 01\_crp.tif} \\
+	\parbox{3.75cm}{\centering create\_histogram.py} 			\ar[d]_{\tt 01\_crp.tif}^{\tt 01\_crp\_histogram.mat}
+		\ar[rr]^{\tt 01\_crp\_histogram.mat} &*{\hspace{2cm}} & \parbox{3.75cm}{\centering plot\_histogram.m} \\
+	\parbox{3.75cm}{\centering create\_enhanced\_image.py} 		\ar[d]	_{\tt 01\_crp\_enh.tif}	
+	&*{\hspace{2cm}} & \parbox{3.75cm}{\centering plot\_jaw\_histograms.m} \\
+	*+++[F=]{\parbox{3.75cm}{\centering jaw\_split.py}} 					\ar[d]_{\tt 01\_crp\_enh.tif}^{\tt 01\_crp\_enh\_jaw\_split.mat}
+		\ar[rru]^{\tt 01\_crp\_enh\_jaw\_split.mat}  \ar[rr]^{\tt 01\_crp\_enh\_jaw\_split.mat}_{\tt 01\_crp\_enh.tif}
+		&*{\hspace{2cm}} & \parbox{3.75cm}{\centering visualize\_jaw\_split.m} \\
+	*+++[F=]{\parbox{3.75cm}{\centering teeth\_isolation.py}} 				\ar[d]	^{\tt 01\_crp\_enh\_teeth\_iso.mat}
+		\ar[rr]^{\tt 01\_crp\_enh\_teeth\_iso.mat}_{\tt 01\_crp\_enh\_jaw\_split.mat} &*{\hspace{2cm}} & \parbox{3.75cm}{\centering visualize\_teeth\_isolation.py} \\
+	*+++[F=]{\parbox{3.75cm}{\centering roi.py}}							\ar[d]	_{\tt 01\_crp\_enh.tif}^{\tt 01\_crp\_enh\_roi.mat}
+		\ar[rr]^{\tt 01\_crp\_enh\_roi.mat}_{\tt 01\_crp\_enh\_teeth\_iso.mat} &*{\hspace{2cm}} & \parbox{3.75cm}{\centering visualize\_roi.py} \\
+	*+++[F=]{\parbox{3.75cm}{\centering contours.py}}
+		\ar[rr]^{\tt 01\_crp\_enh\_contours.mat}_{\tt 01\_crp\_enh\_roi.mat}
+		\ar[d]^{\tt 01\_crp\_enh\_contours.mat}_{\tt 01\_crp\_enh\_roi.mat} &*{\hspace{2cm}} &  \parbox{3.75cm}{\centering visualize\_contours.py} \\
+	\parbox{3.75cm}{\centering create\_masks.py}
+		\ar[rr]^{\tt 01\_crp\_enh\_masks.mat} &*{\hspace{2cm}} &  \parbox{3.75cm}{\centering visualize\_masks.py} \\
+}
+\]
+\caption{Overzicht setup en werking}
+\label{fig:setup}
+\end{figure}
+
+Het originele beeld wordt eerst voorbereid. Hierbij wordt het algemeen bijgesneden ({\tt crop\_image.py}) tot een beeld dat hoofdzakelijk de tanden bevat. Vervolgens wordt van dit beeld een histogram van de intensiteiten gemaakt ({\tt create\_histogram.py}). Aan de hand van dit histogram wordt het beeld vervolgens verbeterd ({\tt create\_enhanced\_image.py}). Dit zijn algemene acties die het beeld voorbereiden voor het effectieve algoritme.
+
+Dit algoritme bestaat uit 4 fasen. Deze zijn in figuur \ref{fig:setup} weergegeven met dubbele omkaderende lijnen. Eerst wordt een splitsing gemaakt tussen de boven- en onderkaak ({\tt jaw\_split.py}). Dan worden voor elk van deze kaken, splitsingen gezicht tussen de vier middelste tanden, waardoor deze ge\"isoleerd worden ({\tt teeth\_isolation}). Op basis van deze splitsingen worden dan rechthoekige afbakeningen van de interessante regio gemaakt, de zgn. \emph{Region Of Interest of ROI} ({\tt roi.py}). Tot slot wordt binnen deze ROI's gezocht naar de contour van de tand ({\tt contours.py}).
+
+De opdracht voorziet dat binaire maskeringen aangemaakt worden. Een laatste stap in het proces voorziet de generatie van zulke maskeringen ({\tt create\_masks.py}).
+
+\section{Resultaten}
+
+TODO
+
+\section{Conclusies}
+
+TODO
+
+\appendix
+
+\section{Boven- en onder kaak-splitsing}
+\label{appendix:jaw-split}
+
+TODO
+
+\section{Individuele snijtand segmentatie}
+\label{appendix:teeth-segmentation}
+
+TODO
+
+\section{Resulterende contouren}
+\label{appendix:contours}
+
+TODO
+
+\end{document}

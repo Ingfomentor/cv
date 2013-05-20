@@ -70,6 +70,8 @@
 - implemented root contour computation (2h)
 - trying to remove outliers from point cloud - failed (3h)
 
+20/5 =
+- report: document setup + description setup = overview diagram (2h30min)
 ---
 total = 67h45
 ---
