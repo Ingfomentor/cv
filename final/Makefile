@@ -37,12 +37,15 @@ LC_CTYPE="C"
 VPATH = ${SRC_DIR}
 
 
-all: clean jaw_splits.png teeth_iso.png roi.png
+all: jaw_splits.png teeth_iso.png roi.png contours.png
 
+# helper targets to generate elementary groups of intermediate images
 crp_images: $(IMAGES:.tif=_crp.tif)
 crp_histograms: $(IMAGES:.tif=_crp_histogram.eps)
 crp_enh_images: $(IMAGES:.tif=_crp_enh.tif)
 crp_enh_histograms: $(IMAGES:.tif=_crp_enh_histogram.eps)
+
+# targets to generate overview montages of all processed images
 jaw_splits.png: $(IMAGES:.tif=_crp_enh_jaw_split.tif)
 	@echo "--- creating montage for $@"
 	@${MONTAGE} $^ $@
@@ -56,6 +59,7 @@ contours.png: $(IMAGES:.tif=_crp_enh_contours.tif)
 	@echo "--- creating montage for $@"
 	@${MONTAGE} $^ $@
 
+# actual targets to generate data or visualisations
 %_crp.tif: %.tif
 	@echo "--- cropping image $<"
 	@${PYTHON} src/crop_image.py $< $@ ${CROP_WIDTH} ${CROP_HEIGHT}
@@ -68,10 +72,6 @@ contours.png: $(IMAGES:.tif=_crp_enh_contours.tif)
 	@echo "--- visualizing histogram $<"
 	@${OCTAVE} --eval "plot_histogram( '$<', '$@');" > /dev/null
 
-%_jaw_split_histograms.eps: %_jaw_split.mat
-	@echo "--- visualizing jaw split histograms $<"
-	@${OCTAVE} --eval "plot_jaw_histograms( '$<', '$@');" > /dev/null
-
 %_enh.tif: %.tif %_histogram.mat
 	@echo "--- creating enhanced version of $<"
 	@${PYTHON} src/create_enhanced_image.py $^ $@
@@ -79,6 +79,10 @@ contours.png: $(IMAGES:.tif=_crp_enh_contours.tif)
 %_jaw_split.mat: %.tif
 	@echo "--- detecting jaw split for $<"
 	@${PYTHON} src/jaw_split.py $< ${SLICES} ${EXPECTED_JAW_SPLIT} ${RHO} ${INVERSION_TOP} $@ 
+
+%_jaw_split_histograms.eps: %_jaw_split.mat
+	@echo "--- visualizing jaw split histograms $<"
+	@${OCTAVE} --eval "plot_jaw_histograms( '$<', '$@');" > /dev/null
 
 %_jaw_split.tif: %.tif %_jaw_split.mat
 	@echo "--- visualizing jaw split for $<"
@@ -96,7 +100,7 @@ contours.png: $(IMAGES:.tif=_crp_enh_contours.tif)
 	@echo "--- creating ROI from $<"
 	@${PYTHON} src/roi.py $< $@
 
-%_roi.tif: %.tif %_jaw_split.mat %_teeth_iso.mat %_roi.mat
+%_roi.tif: %.tif %_teeth_iso.mat %_roi.mat
 	@echo "--- visualizing ROI for $<"
 	@${PYTHON} src/visualize_roi.py $^ $@
 
