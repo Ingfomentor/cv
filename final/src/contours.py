@@ -137,7 +137,7 @@ def trace_crown_contour(tooth):
   # crown center
   center = [ int(width/2), int(height/3) ]
 
-  # for every angle in first two quadrants, find contoir point
+  # for every angle in first two quadrants, find contour point
   for angle in np.arange(0, math.pi, 0.05):
     # construct vector with intensities along a line from the center
     # first get the x and y coordinates
