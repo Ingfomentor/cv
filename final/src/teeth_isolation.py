@@ -7,9 +7,6 @@ Isolates teeth, given a spline describing the split between upper and lower jaw.
 The script produces a Matlab data file containing histograms for both the upper
 and lower jaw, representing the intensities along a perpendicular line through
 the spline, as well as the points describing the 
-
-TODO
-- find solution for upper/lower distance of isolation lines (500,900)
 '''
 
 import sys
