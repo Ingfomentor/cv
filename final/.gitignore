@@ -6,7 +6,8 @@ results
 literature
 *.aux
 *.log
-*.pdf
+./*.pdf
+report/*.pdf
 *.pyg
 *.synctex.gz
 *.pyc
