@@ -1,14 +1,14 @@
 PROJECT=final
 
 # configuration
-CROP_WIDTH=700
-CROP_HEIGHT=1100
-SLICES=5
-EXPECTED_JAW_SPLIT=0.7
-RHO=0.4
-INVERSION_TOP=1.1
-UPPER_LENGTH=350
-LOWER_LENGTH=300
+CROP_WIDTH=700						# center width to retain when cropping
+CROP_HEIGHT=1100					# center height to retain when cropping
+SLICES=5									# 5 slices = 4 teeth
+EXPECTED_JAW_SPLIT=0.7		# the split is roughly 20% below the horizontal center
+SIGMA=0.4									# "peakyness" of the Gaussian prob. dist
+INVERSION_TOP=1.1					# top of prob. dist.
+UPPER_LENGTH=350					# length of upper-jaw teeth
+LOWER_LENGTH=300 					# length of lower-jaw teeth
 
 # !!! DON'T change anything below this point (unless you know what you're doing)
 
@@ -23,11 +23,12 @@ DIST_DIR=dist
 ZIP=zip -q
 RM=rm -rf
 LATEX2PDF=/usr/local/texlive/2011/bin/x86_64-darwin/pdflatex -shell-escape
-OCTAVE=/opt/local/bin/octave --silent \
+OCTAVE=/usr/local/bin/octave --silent \
                              --eval "addpath(strcat(pwd,'/src'));" \
                              --eval "warning('off', 'print:missing_fig2dev');" \
                              --eval "warning('off', 'print:missing_pstoedit');"
 MONTAGE=montage -label "%f" -geometry "140x220>+4+3"
+MONTAGE_GRAPH=montage -label "%f" -geometry "200x150>+4+3"
 
 SRC_DIR=images
 IMAGES=$(notdir $(wildcard ${SRC_DIR}/*.tif))
@@ -37,29 +38,40 @@ LC_CTYPE="C"
 VPATH = ${SRC_DIR}
 
 
-all: jaw_splits.png teeth_iso.png roi.png contours.png
+all: overviews
 
-# helper targets to generate elementary groups of intermediate images
-crp_images: $(IMAGES:.tif=_crp.tif)
-crp_histograms: $(IMAGES:.tif=_crp_histogram.eps)
-crp_enh_images: $(IMAGES:.tif=_crp_enh.tif)
-crp_enh_histograms: $(IMAGES:.tif=_crp_enh_histogram.eps)
+overviews: cropped.png cropped_histograms.png sigmoids.png \
+					 enhanced.png enhanced_histograms.png \
+					 jaw_splits.png teeth_iso.png roi.png contours.png
 
-# targets to generate overview montages of all processed images
+cropped.png: $(IMAGES:.tif=_crp.tif)
+	@echo "--- creating montage $@"
+	@${MONTAGE} $^ $@
+cropped_histograms.png: $(IMAGES:.tif=_crp_histogram.eps)
+	@echo "--- creating montage $@"
+	@${MONTAGE_GRAPH} $^ $@
+enhanced.png: $(IMAGES:.tif=_crp_enh.tif)
+	@echo "--- creating montage $@"
+	@${MONTAGE} $^ $@
+enhanced_histograms.png: $(IMAGES:.tif=_crp_enh_histogram.eps)
+	@echo "--- creating montage $@"
+	@${MONTAGE_GRAPH} $^ $@
+sigmoids.png: $(IMAGES:.tif=_crp_enh_sigmoid.eps)
+	@echo "--- creating montage $@"
+	@${MONTAGE_GRAPH} $^ $@
 jaw_splits.png: $(IMAGES:.tif=_crp_enh_jaw_split.tif)
-	@echo "--- creating montage for $@"
+	@echo "--- creating montage $@"
 	@${MONTAGE} $^ $@
 teeth_iso.png: $(IMAGES:.tif=_crp_enh_teeth_iso.tif)
-	@echo "--- creating montage for $@"
+	@echo "--- creating montage $@"
 	@${MONTAGE} $^ $@
 roi.png: $(IMAGES:.tif=_crp_enh_roi.tif)
-	@echo "--- creating montage for $@"
+	@echo "--- creating montage $@"
 	@${MONTAGE} $^ $@
 contours.png: $(IMAGES:.tif=_crp_enh_contours.tif)
-	@echo "--- creating montage for $@"
+	@echo "--- creating montage $@"
 	@${MONTAGE} $^ $@
 
-# actual targets to generate data or visualisations
 %_crp.tif: %.tif
 	@echo "--- cropping image $<"
 	@${PYTHON} src/crop_image.py $< $@ ${CROP_WIDTH} ${CROP_HEIGHT}
@@ -72,13 +84,21 @@ contours.png: $(IMAGES:.tif=_crp_enh_contours.tif)
 	@echo "--- visualizing histogram $<"
 	@${OCTAVE} --eval "plot_histogram( '$<', '$@');" > /dev/null
 
-%_enh.tif: %.tif %_histogram.mat
+%_enh.mat: %_histogram.mat
+	@echo "--- determining enhancement parameters of $<"
+	@${PYTHON} src/determine_enhancement_parameters.py $^ $@
+
+%_enh.tif: %.tif %_enh.mat
 	@echo "--- creating enhanced version of $<"
 	@${PYTHON} src/create_enhanced_image.py $^ $@
 
+%_sigmoid.eps: %.mat
+	@echo "--- visualising contrast-stretching transformation from $<"
+	@${OCTAVE} --eval "plot_sigmoid( '$<', '$@');" > /dev/null
+
 %_jaw_split.mat: %.tif
 	@echo "--- detecting jaw split for $<"
-	@${PYTHON} src/jaw_split.py $< ${SLICES} ${EXPECTED_JAW_SPLIT} ${RHO} ${INVERSION_TOP} $@ 
+	@${PYTHON} src/jaw_split.py $< ${SLICES} ${EXPECTED_JAW_SPLIT} ${SIGMA} ${INVERSION_TOP} $@ 
 
 %_jaw_split_histograms.eps: %_jaw_split.mat
 	@echo "--- visualizing jaw split histograms $<"
@@ -126,11 +146,12 @@ dist:
 	@rm -rf ${DIST_DIR}
 
 clean:
-	@${RM} *.{mat,eps,tif,png}
+	@${RM} *.png
 	@${RM} verslag/*.{aux,log,synctex.gz}
 
 mrproper: clean
+	@${RM} *.{mat,eps,tif}
 	@${RM} verslag/verslag.pdf
 
-.PRECIOUS: %_histogram.mat %_histogram.eps %_enh.tif %_jaw_split.mat %_teeth_iso.mat %_roi.mat %_contours.mat
-.SECONDARY: %_histogram.mat %_histogram.eps %_enh.tif %_jaw_split.mat %_teeth_iso.mat %_roi.mat %_contours.mat
+.PRECIOUS: %_histogram.mat %_histogram.eps %_enh.mat %_enh.tif %_jaw_split.mat %_teeth_iso.mat %_roi.mat %_contours.mat
+.SECONDARY: %_histogram.mat %_histogram.eps %_enh.mat %_enh.tif %_jaw_split.mat %_teeth_iso.mat %_roi.mat %_contours.mat
