@@ -22,7 +22,7 @@ import repository as repo
 from spline_utils import draw_spline
 
 
-def detect_splits(image, slices, expected_split, rho, inversion_top):
+def detect_splits(image, slices, expected_split, sigma, inversion_top):
   '''
   Detects piece-wise horizontal splits based on the darkest valley in a 
   histogram.
@@ -30,7 +30,7 @@ def detect_splits(image, slices, expected_split, rho, inversion_top):
   @param slices number of vertical bands to detect a split in
   @param expected_split (optionally) provided by the user (expressed in %)
   @param inversion_top used to invert a Gaussian value mutiplication factor
-  @param rho controls the "peakyness" of the Gaussian curve
+  @param sigma controls the "peakyness" of the Gaussian curve
   @return list of Y-axis values, indicating heights of different splits
           and the histograms that were used to determine it
   '''
@@ -46,7 +46,7 @@ def detect_splits(image, slices, expected_split, rho, inversion_top):
   # start with middle split and move outwards left/right
   current_split = slices / 2   # 7 / 2 = 3 == middle (0..6)
   histogram = create_histogram_for_slice(image, current_split * slice_width, 
-                                         slice_width, prev_split, rho, inversion_top)
+                                         slice_width, prev_split, sigma, inversion_top)
   # find "edges" of jaw split
   split_upper, split_lower = find_split_edges(histogram)
   
@@ -66,7 +66,7 @@ def detect_splits(image, slices, expected_split, rho, inversion_top):
     histogram = create_histogram_for_slice(image, current_split * slice_width,
                                            slice_width, 
                                            (prev_left_split_upper + prev_left_split_lower)/2,
-                                           rho, inversion_top)
+                                           sigma, inversion_top)
     histograms[current_split] = histogram
 
     split_upper, split_lower = find_split_edges(histogram)
@@ -80,7 +80,7 @@ def detect_splits(image, slices, expected_split, rho, inversion_top):
     histogram = create_histogram_for_slice(image, (slices - 1 - current_split) * slice_width, 
                                            slice_width,
                                            (prev_right_split_upper + prev_right_split_lower)/2,
-                                           rho, inversion_top)
+                                           sigma, inversion_top)
     histograms[(slices - 1 - current_split)] = histogram
 
     split_upper, split_lower = find_split_edges(histogram)
@@ -108,7 +108,7 @@ def find_split_edges(histogram):
   
   return (split_upper, split_lower)
 
-def create_histogram_for_slice(image, left, width, expected, rho, inversion_top):
+def create_histogram_for_slice(image, left, width, expected, sigma, inversion_top):
   '''
   Creates a histogram of each row, applying a Gaussian probability-based factor
   to darken centered-regions and to lighten less probable areas.
@@ -133,23 +133,23 @@ def create_histogram_for_slice(image, left, width, expected, rho, inversion_top)
   # central regions, equal to the probability where the split occurs
   # create factors according to a Gaussian distribution
   # inversion matches the actual meaning: low factors darken, higher lighten 
-  factors   = inversion_top - get_gaussian_values(height, expected, rho)
+  factors   = inversion_top - get_gaussian_values(height, expected, sigma)
   histogram = np.multiply(histogram, factors)
 
   return histogram
 
-def get_gaussian_values(count, expected, rho):
+def get_gaussian_values(count, expected, sigma):
   '''
   Creates a set of "count" gaussian values, with the top of the curve at
   the expected value.
   @param count of the values
   @param expected value = top of ditribution
-  @param rho controls the "peakyness" of the Gaussian curve
+  @param sigma controls the "peakyness" of the Gaussian curve
   @return values according to the Gaussian distribution with given parameters
   '''
   values = np.zeros(count)
   for x in range(count):
-    values[x] = get_gaussian_value(x, count, expected, rho)
+    values[x] = get_gaussian_value(x, count, expected, sigma)
   return values
 
 def get_gaussian_value(x, max_value, expected, sigma):
@@ -235,7 +235,7 @@ if __name__ == '__main__':
   if len(sys.argv) < 6:
     print "!!! Missing arguments, please provide:\n" + \
           "    - an image\n   - number of slices\n   - expected location\n" + \
-          "    - rho\n    - inversion top"
+          "    - sigma\n    - inversion top"
     sys.exit(2)
 
   # mandatory
@@ -243,7 +243,7 @@ if __name__ == '__main__':
   slices         =   int(sys.argv[2])
   expected_split = float(sys.argv[3])
   assert expected_split < 1            # it must be a % (from the top)
-  rho            = float(sys.argv[4])
+  sigma          = float(sys.argv[4])
   inversion_top  = float(sys.argv[5])
 
   # one more is an output file
@@ -260,7 +260,7 @@ if __name__ == '__main__':
 
   # detect splits in slices and create an interpollating spline
   histograms, splits_upper, splits_lower = \
-    detect_splits(image, slices, expected_split, rho, inversion_top)
+    detect_splits(image, slices, expected_split, sigma, inversion_top)
   spline_upper = interpolate_spline(splits_upper, slice_width)
   spline_lower = interpolate_spline(splits_lower, slice_width)
 
