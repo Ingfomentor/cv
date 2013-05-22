@@ -81,6 +81,8 @@
 - cleaned up cropping (15min)
 - implemented ui.py (started) (1h30min)
 
+22/5 = 
+- extracted create_histogram function (15min)
 ---
 total = 76h45
 ---
