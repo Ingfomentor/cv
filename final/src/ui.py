@@ -106,7 +106,6 @@ def process():
   # do all steps
   # 1. crop
   cropped = crop(original, width, height, top_offset)
-  print cropped.shape
 
   # 2. stretch contrast
   if recompute_beta:
