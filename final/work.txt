@@ -70,7 +70,7 @@
 - implemented root contour computation (2h)
 - trying to remove outliers from point cloud - failed (3h)
 
-20/5 =
+20/5 = 6h
 - report: document setup + description setup = overview diagram (2h30min)
 - report: introduction, literature, strategie (3h30)
 
@@ -78,8 +78,10 @@
 - extracted contrast-stretching parameter finding (1h)
 - cleaned up Makefile (15min)
 - cleaned up cropping (15min)
+- implemented ui.py (started) (1h30min)
+
 ---
-total = 73h45
+total = 76h45
 ---
 
 - turn point cloud into actual contour, outliers removed ()
