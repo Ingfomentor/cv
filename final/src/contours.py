@@ -54,7 +54,7 @@ def detect_contours(image, rois):
       trace_root_contour(tooth, crown_contour[len(crown_contour)-1])
     right_root_contour = \
       trace_root_contour(tooth, crown_contour[0], 5)
-    root_contour = np.concatenate((left_root_contour, right_root_contour))
+    root_contour = np.concatenate((left_root_contour, right_root_contour[::-1]))
 
     if isUpper: 
       tooth = np.flipud(tooth)             # make all teeth's crowns upside
@@ -238,13 +238,7 @@ def draw_contours(image, contours, roi, color=[0,255,255]):
   
   # use roi to determine angle and origin
   for index, roi in enumerate(roi):
-    origin, angle = get_roi_position(roi)
-
-    # relative origin is different between upper and lower jaw roi
-    if is_upper(roi): origin = roi[1]
-
-    # rotate and move contour to match roi
-    contour = ( rotate_points(contours[index], angle) + origin ).astype(np.int)
+    contour = align_to_roi(contours[index], roi)
     # draw it as 3x3 pixels
     for dx in range(0,3):
       for dy in range(0,3):
@@ -252,6 +246,16 @@ def draw_contours(image, contours, roi, color=[0,255,255]):
               (contour[:,0]+dx).clip(0,width-1)] = color
 
   return image
+
+def align_to_roi(contour, roi):
+  # use roi to determine angle and origin
+  origin, angle = get_roi_position(roi)
+
+  # relative origin is different between upper and lower jaw roi
+  if is_upper(roi): origin = roi[1]
+
+  # rotate and move contour to match roi
+  return ( rotate_points(contour, angle) + origin ).astype(np.int)
 
 def get_roi_position(roi):
   return tuple(roi[0].astype(np.int)), get_angle(roi[0], roi[3])

@@ -86,6 +86,7 @@
 - extracted detect_teeth_splits (15min)
 - finalised ui.py (1h30min)
 - introduced crop_top_offset (1h)
+- implemented masking (4h30min)
 
 ---
 total = 77h45

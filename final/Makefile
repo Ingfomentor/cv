@@ -73,6 +73,10 @@ roi.png: $(IMAGES:.tif=_crp_enh_roi.tif)
 contours.png: $(IMAGES:.tif=_crp_enh_contours.tif)
 	@echo "--- creating montage $@"
 	@${MONTAGE} $^ $@
+masks.png: $(IMAGES:.tif=_crp_enh_masks.tif)
+	@echo "--- creating montage $@"
+	@${MONTAGE} $^ $@
+
 
 %_crp.tif: %.tif
 	@echo "--- cropping image $<"
@@ -134,6 +138,14 @@ contours.png: $(IMAGES:.tif=_crp_enh_contours.tif)
 	@echo "--- visualizing contours on $<"
 	@${PYTHON} src/visualize_contours.py $^ $@
 
+%_masks.mat: %.tif %_contours.mat %_roi.mat
+	@echo "--- creating masks for $<"
+	@${PYTHON} src/mask.py $^ $@
+
+%_masks.tif: %.tif %_masks.mat %_roi.mat
+	@echo "--- visualizing masks on $<"
+	@${PYTHON} src/visualize_masks.py $^ $@
+
 ui:
 	@${PYTHON} src/ui.py ${CROP_WIDTH} ${CROP_HEIGHT} ${CROP_TOP_OFFSET} ${ALPHA} \
 											 ${EXPECTED_JAW_SPLIT} ${SIGMA} ${INVERSION_TOP} \
@@ -153,12 +165,12 @@ dist:
 	@rm -rf ${DIST_DIR}
 
 clean:
-	@${RM} *.png
+	@${RM} *.{png,eps,tif}
 	@${RM} verslag/*.{aux,log,synctex.gz}
 
 mrproper: clean
-	@${RM} *.{mat,eps,tif}
+	@${RM} *.mat
 	@${RM} verslag/verslag.pdf
 
-.PRECIOUS: %_histogram.mat %_histogram.eps %_enh.mat %_enh.tif %_jaw_split.mat %_teeth_iso.mat %_roi.mat %_contours.mat
-.SECONDARY: %_histogram.mat %_histogram.eps %_enh.mat %_enh.tif %_jaw_split.mat %_teeth_iso.mat %_roi.mat %_contours.mat
+.PRECIOUS: %_histogram.mat %_histogram.eps %_enh.mat %_jaw_split.mat %_teeth_iso.mat %_roi.mat %_contours.mat %_masks.mat
+.SECONDARY: %_histogram.mat %_histogram.eps %_enh.mat %_jaw_split.mat %_teeth_iso.mat %_roi.mat %_contours.mat %_masks.mat
