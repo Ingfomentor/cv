@@ -27,6 +27,10 @@
 \usepackage[all,color]{xy}
 \xyoption{all}
 
+\usepackage{epstopdf}
+\epstopdfDeclareGraphicsRule{.tif}{png}{.png}{convert #1 \OutputFile}
+\AppendGraphicsExtensions{.tif}
+
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 \fancyhead{}
@@ -130,6 +134,10 @@ Zoals aangegeven in \cite{chen2004tooth} verwachten we inderdaad dat er mogelijk
 
 \section{Implementatie}
 
+In dit deel bespreken we de implementatie van de gekozen strategie. Hierbij bekijken we eerst de setup van het project met de verdeling van verantwoordelijkheden over gekozen technologie\"en en de structurele opdeling in scripts.
+
+Vervolgens doorlopen we de implementatie chronologisch. Hierbij bespreken we de aanpak zoals deze voorgesteld werd in de literatuur en geven we aan bepaalde aannames werden gedaan of waar aanpassingen werden doorgevoerd om bepaalde problemen te verhelpen.
+
 \subsection{Setup}
 
 De resulterende code is hoofdzakelijk geschreven in Python, maakt gebruik van de OpenCV, NumPy en SciPy bibliotheken. Daarnaast werd geopteerd om de co\"ordinatie en aansturing van deze code te doen vanuit een doel-geori\"enteerde {\tt Makefile}. Hierdoor is er een sterke scheiding tussen configuratie en aansturing enerzijds en algoritme en uitvoering anderzijds. Zaken als bepalen welke bestanden geladen moeten worden of welke logica dient uitgevoerd te worden is op deze manier gecentraliseerd en niet verspreid over de verschillende Python bestanden.
@@ -177,9 +185,86 @@ Dit algoritme bestaat uit 4 fasen. Deze zijn in figuur \ref{fig:setup} weergegev
 
 De opdracht voorziet dat binaire maskeringen aangemaakt worden. Een laatste stap in het proces voorziet de generatie van zulke maskeringen ({\tt create\_masks.py}).
 
-\subsection{Beeld verbetering}
+\subsection{Voorbereiding}
 
-TODO
+Vooralleer de segmentatie en contour afbakening kan gebeuren, is het aangewezen om het originele beeld voor te bereiden. De originele beelden zijn zeer ruim in functie van de scope van de opdracht. De opdracht focust op de acht snijtanden, daar waar de originele beelden de volledige kaken beslaan. Daarom werd besloten om als eerste stap een zeer ruwe ROI te bepalen, een zgn. macro-ROI.
+
+Vervolgens dient ook het contrast verbeterd te worden. Hiervoor werd de techniek \emph{contrast stretching} uit  \cite{piotrowski2000active} en \cite{said2004dental} gehanteerd.
+
+\subsubsection{Bepalen macro-ROI}
+
+De originele beelden laten toe om de sterke structurele gelijkenissen uit te buiten en het volledige beeld te herleiden tot een kleiner beeld waar zich alleen de zone op bevindt die belangrijk is in dit project. Zonder te zoeken naar optimale maten, werd een ruwe bijsnijding ge\"implementeerd die het beeld herleidde tot een centrale regio van 700 pixels breed en 1100 pixels hoog\footnote{De originele beelden zijn 3023 breed en 1597 hoog.}.
+
+Zoals blijkt uit het overzicht van de voorbereide originele beelden in appendix \ref{appendix:prepared-originals}, kan deze bijsnijding eigenlijk nog verbeterd worden en kan vooral aan de bovenkant nog meer onnuttig beeldmateriaal verwijderd worden. Er is geopteerd om deze geleide operaties zo algemeen mogelijk uit te voeren om zo min mogelijke manuele interferentie te noodzaken. Hierdoor zijn de voorbereidingen redelijk ruw, maar zo weerspiegelen hopelijk de resultaten de kwaliteiten van de strategie in een geautomatiseerde omgeving waar zo min mogelijk interventie nodig is.
+
+We merken op dat een aantal van de originele beelden problematische eigenschappen vertonen zoals schaduwen, corrigerende beugels en blokjes. Daarnaast zijn er ook een aantal beelden met sterk vervormde structuren.
+
+\subsubsection{Verbeteren van het contrast}
+
+Radiografie-beelden zijn gekenmerkt door een veelheid aan grijstinten en wazige overgangen. Omdat we op basis van histogrammen van intensiteiten splitsingen willen gaan bepalen, is het belangrijk dat er een duidelijk onderscheid is tussen donkere en lichte zones. Om deze reden is het belangrijk om te zorgen voor een accentuering van het contrast, waarbij donkere zones expliciet donkerder gemaakt worden lichtere zones lichter. Een techniek die dit doet is het zogenaamde \emph{contrast stretching}.
+
+Zoals de naam doet vermoeden trachten we bij \emph{contrast stretching} het contrast dat er is zo uit te rekken, dat het nadrukkelijker aanwezig is. Om dit te doen, werken we met een histogram van de intensiteiten van de grijs-waarden en defini‘ren we een transformatie van deze intensiteiten. Figuur \ref{fig:contrast-stretching-histograms} toont het histogram voor en na \emph{contrast stretching}. Het is duidelijk dat de intensiteiten nu als het ware uitgerokken zijn over het volledige spectrum en dat de stretching vooral in de middelste zone gebeurd is. Merk op dat door het uitrekken er ook gaten ontstaan.
+
+\begin{figure}
+\centering
+\begin{subfigure}{.49\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{../01_crp_histogram.eps}
+  \caption{Origineel}
+  \label{fig:original-histogram}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{../01_crp_enh_histogram.eps}
+  \caption{Na verbetering}
+  \label{fig:enhanced-histogram}
+\end{subfigure}
+\label{fig:contrast-stretching-histograms}
+% \caption{Histogrammen voor en na contrast stretching van {\tt 01_crp.tif}}
+\end{figure}
+
+Als transformatiefunctie werd een \emph{sigmoid} functie gebruikt weergegeven door vergelijking \ref{eq:sigmoid}.
+
+\begin{equation} \label{eq:sigmoid}
+\frac{255}{1+e^{-\frac{I - \beta}{\alpha}}}
+\end{equation}
+
+Figuur \ref{fig:sigmoid} toont het verloop van deze transformatie.
+
+\begin{figure}
+%  \includegraphics[width=.5\linewidth]{../01_crp_sigmoid.eps}
+%  \caption{Sigmoid-gebaseerde normalisatie transformatie voor {\tt 01_crp.tif}}
+  \label{fig:original-histogram}
+\end{figure}
+
+
+
+Figuur \ref{fig:preparation} geeft een visueel overzicht van de evolutie van origineel beeld tot bijgesneden beeld met verbeterd contrast.
+
+\begin{figure}
+\centering
+\begin{subfigure}{.32\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{../images/01.tif}
+  \caption{Origineel beeld}
+  \label{fig:original}
+\end{subfigure}
+\begin{subfigure}{.32\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{../01_crp.tif}
+  \caption{Bijgesneden beeld}
+  \label{fig:cropped}
+\end{subfigure}
+\begin{subfigure}{.32\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{../01_crp_enh.tif}
+  \caption{Verbeterd contrast}
+  \label{fig:cropped}
+\end{subfigure}
+\caption{Evolutie tijdens de voorbereiding van {\tt 01.tif}.}
+\label{fig:preparation}
+\end{figure}
+
 
 \subsection{Segmentatie}
 
@@ -204,19 +289,49 @@ TODO
 
 \appendix
 
+\section{Voorbereide originele beelden}
+\label{appendix:prepared-originals}
+
+\begin{figure}[H]
+\includegraphics[width=\linewidth]{../prepared.png}
+\caption{Voorbereide originele beelden.}
+\label{fig:prepared-originals}
+\end{figure}
+
 \section{Boven- en onder kaak-splitsing}
 \label{appendix:jaw-split}
 
-TODO
+\begin{figure}[H]
+\includegraphics[width=\linewidth]{../jaw_splits.png}
+\caption{Splitsing van onder- en bovenkaak.}
+\label{fig:jaw-splits}
+\end{figure}
 
 \section{Individuele snijtand segmentatie}
 \label{appendix:teeth-segmentation}
 
-TODO
+\begin{figure}[H]
+\includegraphics[width=\linewidth]{../teeth_iso.png}
+\caption{Splitsing van individuele snijtanden.}
+\label{fig:teeth-isolation}
+\end{figure}
+
+\section{ROI's}
+\label{appendix:rois}
+
+\begin{figure}[H]
+\includegraphics[width=\linewidth]{../roi.png}
+\caption{ROI's}
+\label{fig:rois}
+\end{figure}
 
 \section{Resulterende contouren}
 \label{appendix:contours}
 
-TODO
+\begin{figure}[H]
+\includegraphics[width=\linewidth]{../contours.png}
+\caption{Contourss}
+\label{fig:contours}
+\end{figure}
 
 \end{document}

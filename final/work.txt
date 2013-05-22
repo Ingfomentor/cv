@@ -70,9 +70,10 @@
 - implemented root contour computation (2h)
 - trying to remove outliers from point cloud - failed (3h)
 
-20/5 = 6h
+20/5 = 7h
 - report: document setup + description setup = overview diagram (2h30min)
 - report: introduction, literature, strategie (3h30)
+- report: implementation enhancement (1h)
 
 21/5 = 3h
 - extracted contrast-stretching parameter finding (1h)
