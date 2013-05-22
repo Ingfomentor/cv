@@ -92,13 +92,13 @@ def extract_roi(image, roi):
 
   corner = roi[0].astype(np.int)
 
-  x1 = max(0, int(corner[0]), width-1)
-  y1 = max(0, int(corner[1]), height-1)
-  x2 = max(0, int(x1 + width), width-1)
+  x1 = max(0, int(corner[0]))
+  y1 = max(0, int(corner[1]))
+  x2 = max(0, int(x1 + width))
   if is_upper(roi):
-    y2 = max(0, int(y1 - height), height-1)
+    y2 = max(0, int(y1 - height))
   else:
-    y2 = max(0, int(y1 + height), height-1)
+    y2 = max(0, int(y1 + height))
 
   part = image[min(y1,y2):max(y1,y2), min(x1,x2):max(x1,x2)]
   
