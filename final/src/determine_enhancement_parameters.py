@@ -36,8 +36,8 @@ if __name__ == '__main__':
 
   # obtain arguments and dispatch
   if len(sys.argv) > 3:
+    alpha = int(sys.argv[2])
     beta  = calc_beta(repo.get_data(sys.argv[1])['histogram'])
-    alpha = sys.argv[2]
     repo.put_data(sys.argv[3], { 'alpha': alpha, 'beta': beta })
   else:
     print "!!! Missing argument. " + \
