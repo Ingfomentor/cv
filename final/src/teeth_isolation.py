@@ -25,6 +25,29 @@ from spline_utils import draw_spline, reconstruct_spline_tuple
 from line_utils import sample_lines
 
 
+def detect_teeth_splits(image, spline, length):
+  _, width, _ = image.shape
+
+  # detect splits in slices and create an interpollating spline
+  histogram = create_spline_histogram(image, spline, length)
+  splits    = find_centered_valleys(histogram, 5)
+
+  # if we can't find 5 splits / 4 teeth, we need to lower the length of the
+  # teeth (case for 29)
+  while len(splits) < 5:
+    if length < 0:
+      length = length + 50
+    else:
+      length = length - 50
+    print "WARNING: adjusted length of teeth: ", length
+    histogram = create_spline_histogram(image, spline, length)
+    splits    = find_centered_valleys(histogram, 5)
+    
+  # compute the lines at the splits
+  lines = determine_perpendiculars_to_spline(spline, splits, length, width-1)
+  
+  return histogram, splits, lines
+
 def create_spline_histogram(image, tck, length=0):
   '''
   Creates a histogram based on lines orthogonal to a spline function.
@@ -194,29 +217,11 @@ if __name__ == '__main__':
   spline_upper = reconstruct_spline_tuple(data, 'upper')
   spline_lower = reconstruct_spline_tuple(data, 'lower')
 
-  # detect splits in slices and create an interpollating spline
-  histogram_upper = create_spline_histogram(image, spline_upper,
-                                            length=upper_length)
-
-  splits_upper    = find_centered_valleys(histogram_upper, 5)
-  # when we can't find 5 splits / 4 teeth, we need to lower the length of the
-  # teeth (case for 29)
-  while len(splits_upper) < 5:
-    upper_length = upper_length + 50
-    histogram_upper = create_spline_histogram(image, spline_upper,
-                                              length=upper_length)
-    splits_upper = find_centered_valleys(histogram_upper, 5)
+  histogram_upper, splits_upper, lines_upper = \
+    detect_teeth_splits(image, spline_upper, upper_length)
     
-  lines_upper     = determine_perpendiculars_to_spline(spline_upper,
-                                                       splits_upper, 
-                                                       upper_length, width-1)
-  
-  histogram_lower = create_spline_histogram(image, spline_lower,
-                                            length=lower_length)
-  splits_lower    = find_centered_valleys(histogram_lower, 5)
-  lines_lower     = determine_perpendiculars_to_spline(spline_lower,
-                                                       splits_lower,
-                                                       lower_length, width-1)
+  histogram_lower, splits_lower, lines_lower = \
+    detect_teeth_splits(image, spline_lower, lower_length)
 
   if output_file != None:
     repo.put_data(output_file, { 'upper': { 'histogram': histogram_upper,
