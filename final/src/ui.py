@@ -39,6 +39,7 @@ recompute_beta = True
 image          = 1
 width          = None
 height         = None
+top_offset     = None
 alpha          = None
 beta           = 128
 expected_split = None
@@ -62,6 +63,7 @@ def show():
   # cropping
   cv.CreateTrackbar("width",          wndName, width,             3022, refresh)
   cv.CreateTrackbar("height",         wndName, height,            1597, refresh)
+  cv.CreateTrackbar("top_offset",     wndName, top_offset,        300,  refresh)
   # contrast stretching
   cv.CreateTrackbar("alpha",          wndName, alpha,              255, refresh)
   cv.CreateTrackbar("beta",           wndName, beta,               255, refresh)
@@ -93,8 +95,8 @@ def process():
   @param output_file for the contrast-stretched image
   '''
 
-  global recompute_beta, \
-         image, width, height, alpha, beta, expected_split, sigma, \
+  global wndName, recompute_beta, \
+         image, width, height, top_offset, alpha, beta, expected_split, sigma, \
          inversion_top, upper_length, lower_length
 
   # load data and init beta
@@ -103,12 +105,14 @@ def process():
 
   # do all steps
   # 1. crop
-  cropped = crop(original, width, height)
+  cropped = crop(original, width, height, top_offset)
+  print cropped.shape
 
   # 2. stretch contrast
   if recompute_beta:
     histogram = create_histogram(cropped)
     beta      = calc_beta(histogram)
+    cv.SetTrackbarPos("beta", wndName, beta)
     print "--- computed beta for new image: ", beta
     recompute_beta = False
 
@@ -143,8 +147,8 @@ def process():
   roi_upper = create_roi(lines_upper)
   roi_lower = create_roi(lines_lower) 
     
-  annotated = draw_roi(annotated, roi_upper, (255,0,255))
-  annotated = draw_roi(annotated, roi_lower, (0,255,255))
+  annotated = draw_roi(annotated, roi_upper, (255,128,128))
+  annotated = draw_roi(annotated, roi_lower, (255,128,128))
   
   # 6. Contours
   # upper
@@ -176,7 +180,7 @@ def refresh(value):
   parameters.
   '''
   global paramsChanged, recompute_beta, wndName, \
-         image, width, height, alpha, beta, expected_split, sigma, \
+         image, width, top_offset, height, alpha, beta, expected_split, sigma, \
          inversion_top
 
   old_image      = image
@@ -184,6 +188,7 @@ def refresh(value):
   # cropping
   width          = cv.GetTrackbarPos("width",            wndName)
   height         = cv.GetTrackbarPos("height",           wndName)
+  top_offset     = cv.GetTrackbarPos("top_offset",       wndName)
   # contrast stretching
   alpha          = cv.GetTrackbarPos("alpha",            wndName)
   beta           = cv.GetTrackbarPos("beta",             wndName)
@@ -197,7 +202,7 @@ def refresh(value):
   upper_length   = cv.GetTrackbarPos("upper_length",     wndName)
   lower_length   = cv.GetTrackbarPos("lower_length",     wndName)
   
-  print image, width, height, alpha, beta, expected_split, sigma, \
+  print image, width, height, top_offset, alpha, beta, expected_split, sigma, \
         inversion_top, upper_length, lower_length
 
   paramsChanged = True
@@ -206,11 +211,12 @@ def refresh(value):
 if __name__ == '__main__':
   width          = int(sys.argv[1])
   height         = int(sys.argv[2])
-  alpha          = int(sys.argv[3])
-  expected_split = float(sys.argv[4])
-  sigma          = float(sys.argv[5])
-  inversion_top  = float(sys.argv[6])
-  upper_length   = int(sys.argv[7])
-  lower_length   = int(sys.argv[8])
+  top_offset     = int(sys.argv[3])
+  alpha          = int(sys.argv[4])
+  expected_split = float(sys.argv[5])
+  sigma          = float(sys.argv[6])
+  inversion_top  = float(sys.argv[7])
+  upper_length   = int(sys.argv[8])
+  lower_length   = int(sys.argv[9])
   
   show()

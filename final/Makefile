@@ -3,7 +3,8 @@ PROJECT=final
 # configuration
 CROP_WIDTH=700						# center width to retain when cropping
 CROP_HEIGHT=1100					# center height to retain when cropping
-ALPHA=30									# alpha value for contrast-stretching
+CROP_TOP_OFFSET=250				# additional top offset for cropping
+ALPHA=20									# alpha value for contrast-stretching
 SLICES=5									# 5 slices = 4 teeth
 EXPECTED_JAW_SPLIT=0.7		# the split is roughly 20% below the horizontal center
 SIGMA=0.4									# "peakyness" of the Gaussian prob. dist
@@ -28,7 +29,7 @@ OCTAVE=/opt/local/bin/octave --silent \
                              --eval "addpath(strcat(pwd,'/src'));" \
                              --eval "warning('off', 'print:missing_fig2dev');" \
                              --eval "warning('off', 'print:missing_pstoedit');"
-MONTAGE=montage -label "%f" -geometry "140x220>+4+3"
+MONTAGE=montage -label "%f" -geometry "140x170>+4+3"
 MONTAGE_GRAPH=montage -label "%f" -geometry "200x150>+4+3"
 
 SRC_DIR=images
@@ -75,7 +76,7 @@ contours.png: $(IMAGES:.tif=_crp_enh_contours.tif)
 
 %_crp.tif: %.tif
 	@echo "--- cropping image $<"
-	@${PYTHON} src/crop_image.py $< $@ ${CROP_WIDTH} ${CROP_HEIGHT}
+	@${PYTHON} src/crop_image.py $< $@ ${CROP_WIDTH} ${CROP_HEIGHT} ${CROP_TOP_OFFSET}
 
 %_histogram.mat: %.tif
 	@echo "--- creating histogram for $<"
@@ -134,7 +135,7 @@ contours.png: $(IMAGES:.tif=_crp_enh_contours.tif)
 	@${PYTHON} src/visualize_contours.py $^ $@
 
 ui:
-	@${PYTHON} src/ui.py ${CROP_WIDTH} ${CROP_HEIGHT} ${ALPHA} \
+	@${PYTHON} src/ui.py ${CROP_WIDTH} ${CROP_HEIGHT} ${CROP_TOP_OFFSET} ${ALPHA} \
 											 ${EXPECTED_JAW_SPLIT} ${SIGMA} ${INVERSION_TOP} \
 											 ${UPPER_LENGTH} ${LOWER_LENGTH}
 
