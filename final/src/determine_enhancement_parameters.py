@@ -12,14 +12,6 @@ import numpy as np
 import repository as repo
 
 
-def get_alpha():
-  '''
-  Provides a value for alpha.
-  This value was emperically determined.
-  @return alpha parameter value
-  '''
-  return 30
-
 def calc_beta(histogram):
   '''
   Computes a value for beta.
@@ -43,11 +35,11 @@ def calc_beta(histogram):
 if __name__ == '__main__':
 
   # obtain arguments and dispatch
-  if len(sys.argv) > 2:
-    alpha = get_alpha()
+  if len(sys.argv) > 3:
     beta  = calc_beta(repo.get_data(sys.argv[1])['histogram'])
-    repo.put_data(sys.argv[2], { 'alpha': alpha, 'beta': beta })
+    alpha = sys.argv[2]
+    repo.put_data(sys.argv[3], { 'alpha': alpha, 'beta': beta })
   else:
     print "!!! Missing argument. " + \
-          "Please provide a histogram and output file."
+          "Please provide a histogram, alpha value and output file."
     sys.exit(2)

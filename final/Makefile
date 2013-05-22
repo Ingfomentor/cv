@@ -3,6 +3,7 @@ PROJECT=final
 # configuration
 CROP_WIDTH=700						# center width to retain when cropping
 CROP_HEIGHT=1100					# center height to retain when cropping
+ALPHA=30									# alpha value for contrast-stretching
 SLICES=5									# 5 slices = 4 teeth
 EXPECTED_JAW_SPLIT=0.7		# the split is roughly 20% below the horizontal center
 SIGMA=0.4									# "peakyness" of the Gaussian prob. dist
@@ -23,7 +24,7 @@ DIST_DIR=dist
 ZIP=zip -q
 RM=rm -rf
 LATEX2PDF=/usr/local/texlive/2011/bin/x86_64-darwin/pdflatex -shell-escape
-OCTAVE=/usr/local/bin/octave --silent \
+OCTAVE=/opt/local/bin/octave --silent \
                              --eval "addpath(strcat(pwd,'/src'));" \
                              --eval "warning('off', 'print:missing_fig2dev');" \
                              --eval "warning('off', 'print:missing_pstoedit');"
@@ -86,7 +87,7 @@ contours.png: $(IMAGES:.tif=_crp_enh_contours.tif)
 
 %_enh.mat: %_histogram.mat
 	@echo "--- determining enhancement parameters of $<"
-	@${PYTHON} src/determine_enhancement_parameters.py $^ $@
+	@${PYTHON} src/determine_enhancement_parameters.py $^ ${ALPHA} $@
 
 %_enh.tif: %.tif %_enh.mat
 	@echo "--- creating enhanced version of $<"
@@ -131,6 +132,11 @@ contours.png: $(IMAGES:.tif=_crp_enh_contours.tif)
 %_contours.tif: %.tif %_contours.mat %_roi.mat
 	@echo "--- visualizing contours on $<"
 	@${PYTHON} src/visualize_contours.py $^ $@
+
+ui:
+	@${PYTHON} src/ui.py ${CROP_WIDTH} ${CROP_HEIGHT} ${ALPHA} \
+											 ${EXPECTED_JAW_SPLIT} ${SIGMA} ${INVERSION_TOP} \
+											 ${UPPER_LENGTH} ${LOWER_LENGTH}
 
 ${REPORT}:
 	@(cd report; \
