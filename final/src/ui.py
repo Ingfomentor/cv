@@ -14,33 +14,42 @@ import numpy as np
 
 import repository as repo
 
-from crop_image import crop
-from create_enhanced_image import stretch_contrast
-from jaw_split import detect_splits, interpolate_spline, draw_splits
 from spline_utils import draw_spline
 
+from crop_image                       import crop
+from create_histogram                 import create_histogram
+from determine_enhancement_parameters import calc_beta
+from create_enhanced_image            import stretch_contrast
+from jaw_split                        import detect_splits, \
+                                             interpolate_spline, \
+                                             draw_splits
+from teeth_isolation                  import detect_teeth_splits, \
+                                             draw_teeth_separations
 
 # global variables needed by UI
 wndName       = "ui"
+paramsChanged  = True
+recompute_beta = True
 
-# default configuration (for 01.tif)
+# all parameters that can be changed
 image          = 1
-width          = 700
-height         = 1100
-alpha          = 30
+width          = None
+height         = None
+alpha          = None
 beta           = 128
-expected_split = 0.7
-sigma          = 0.4
-inversion_top  = 1.1
+expected_split = None
+sigma          = None
+inversion_top  = None
+upper_length   = None
+lower_length   = None
 
-paramsChanged = True
 
 def show():
   '''
   Shows a UI for manual experiments.
   '''
   global image, width, height, alpha, beta, expected_split, sigma, \
-         inversion_top, \
+         inversion_top, upper_length, lower_length, \
          paramsChanged
 
   # create UI
@@ -52,11 +61,17 @@ def show():
   # contrast stretching
   cv.CreateTrackbar("alpha",          wndName, alpha,              255, refresh)
   cv.CreateTrackbar("beta",           wndName, beta,               255, refresh)
+  beta = None
+
   # jaw split
   cv.CreateTrackbar("expected_split", wndName, int(expected_split *100),100, refresh)
   cv.CreateTrackbar("sigma",          wndName, int(sigma *10),           10, refresh)
   cv.CreateTrackbar("inversion_top",  wndName, int(inversion_top *10),   20, refresh)
-    
+  # teeth isolation
+  cv.CreateTrackbar("upper_length",   wndName, upper_length,       500, refresh)
+  cv.CreateTrackbar("lower_length",   wndName, lower_length,       500, refresh)
+  
+
   # show own implementation with automated beta computation
   # + interactive looking for better values
   while cv2.waitKey(100) == -1:
@@ -74,8 +89,9 @@ def process():
   @param output_file for the contrast-stretched image
   '''
 
-  global image, width, height, alpha, beta, expected_split, sigma, \
-         inversion_top
+  global recompute_beta, \
+         image, width, height, alpha, beta, expected_split, sigma, \
+         inversion_top, upper_length, lower_length
 
   # load data and init beta
   filename = get_image_filename(image)
@@ -86,6 +102,12 @@ def process():
   cropped = crop(original, width, height)
 
   # 2. stretch contrast
+  if recompute_beta:
+    histogram = create_histogram(cropped)
+    beta      = calc_beta(histogram)
+    print "--- computed beta for new image: ", beta
+    recompute_beta = False
+
   enhanced = stretch_contrast(cropped, alpha, beta)
 
   # 3. split jaws
@@ -97,12 +119,21 @@ def process():
   spline_upper = interpolate_spline(splits_upper, slice_width)
   spline_lower = interpolate_spline(splits_lower, slice_width)
   
-  annotated = draw_splits(enhanced,  splits_upper)
-  annotated = draw_splits(annotated, splits_lower)
-  annotated = draw_spline(annotated, spline_upper)
+  annotated = draw_spline(enhanced, spline_upper)
+  annotated = draw_splits(annotated,  splits_upper)
+
   annotated = draw_spline(annotated, spline_lower)
+  annotated = draw_splits(annotated, splits_lower)
   
   # 4. isolate teeth
+  histogram_upper, splits_upper, lines_upper = \
+    detect_teeth_splits(enhanced, spline_upper, upper_length * -1)
+    
+  histogram_lower, splits_lower, lines_lower = \
+    detect_teeth_splits(enhanced, spline_lower, lower_length)
+
+  annotated = draw_teeth_separations(annotated, lines_upper, [255,0,0])
+  annotated = draw_teeth_separations(annotated, lines_lower, [255,255,0])
 
   # 5. ROI
   
@@ -122,26 +153,43 @@ def refresh(value):
   because we don't known which trackbar it comes from. We simply update all
   parameters.
   '''
-  global paramsChanged, wndName, \
+  global paramsChanged, recompute_beta, wndName, \
          image, width, height, alpha, beta, expected_split, sigma, \
          inversion_top
-         
-  
+
+  old_image      = image
   image          = cv.GetTrackbarPos("image",            wndName) + 1
+  print image, old_image
   # cropping
   width          = cv.GetTrackbarPos("width",            wndName)
   height         = cv.GetTrackbarPos("height",           wndName)
   # contrast stretching
   alpha          = cv.GetTrackbarPos("alpha",            wndName)
   beta           = cv.GetTrackbarPos("beta",             wndName)
+  if image != old_image:
+    recompute_beta = True
   # jaw split
   expected_split = cv.GetTrackbarPos("expected_split",   wndName) / 100.
   sigma          = cv.GetTrackbarPos("sigma",            wndName) / 10.
   inversion_top  = cv.GetTrackbarPos("inversion_top",    wndName) / 10.
+  # teeth isolation
+  upper_length   = cv.GetTrackbarPos("upper_length",     wndName)
+  lower_length   = cv.GetTrackbarPos("lower_length",     wndName)
   
-  print image, width, height, alpha, beta, expected_split, sigma, inversion_top  
+  print image, width, height, alpha, beta, expected_split, sigma, \
+        inversion_top, upper_length, lower_length
+
   paramsChanged = True
 
 # this part of the code is only executed if the file is run stand-alone
 if __name__ == '__main__':
+  width          = int(sys.argv[1])
+  height         = int(sys.argv[2])
+  alpha          = int(sys.argv[3])
+  expected_split = float(sys.argv[4])
+  sigma          = float(sys.argv[5])
+  inversion_top  = float(sys.argv[6])
+  upper_length   = int(sys.argv[7])
+  lower_length   = int(sys.argv[8])
+  
   show()

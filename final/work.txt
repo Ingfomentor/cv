@@ -83,6 +83,8 @@
 
 22/5 = 
 - extracted create_histogram function (15min)
+- extracted detect_teeth_splits (15min)
+- continued work on ui.py = teeth isolation + configuration (1h30)
 ---
 total = 76h45
 ---
