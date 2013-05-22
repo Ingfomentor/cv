@@ -15,28 +15,37 @@ import numpy as np
 import repository as repo
 
 
-# obtain arguments
-if len(sys.argv) < 5:
-  print "!!! Missing arguments, please provide input and output filenames, " + \
-        "    as well as width and height of cropped area."
-  sys.exit(2)
+def crop(image, crop_to_width, crop_to_height):
+  # fetch image's geometric dimensions
+  height, width, _ = image.shape
 
-input_file     = sys.argv[1]
-output_file    = sys.argv[2]
-crop_to_width  = int(sys.argv[3])
-crop_to_height = int(sys.argv[4])
+  # determine box to crop
+  left   = np.around((width - crop_to_width)/2)
+  right  = left + crop_to_width
+  top    = np.around((height - crop_to_height)/2)
+  bottom = top + crop_to_height
 
-# fetch image and its geometric dimensions
-image = repo.get_image(input_file)
-height, width, _ = image.shape
+  return image[top:bottom,left:right]
 
-# determine box to crop
-left   = np.around((width - crop_to_width)/2)
-right  = left + crop_to_width
-top    = np.around((height - crop_to_height)/2)
-bottom = top + crop_to_height
+# this part of the code is only executed if the file is run stand-alone
+if __name__ == '__main__':
 
-cropped_image = image[top:bottom,left:right]
+  # obtain arguments
+  if len(sys.argv) < 5:
+    print "!!! Missing arguments, please provide in- and output filenames, " + \
+          "    as well as width and height of cropped area."
+    sys.exit(2)
 
-# store it back in the respository
-repo.put_image(output_file, cropped_image)
+  input_file     = sys.argv[1]
+  output_file    = sys.argv[2]
+  crop_to_width  = int(sys.argv[3])
+  crop_to_height = int(sys.argv[4])
+
+  # fetch the image
+  image = repo.get_image(input_file)
+
+  # crop
+  cropped_image = crop(image, crop_to_width, crop_to_height)
+
+  # and store it back in the respository
+  repo.put_image(output_file, cropped_image)

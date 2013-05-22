@@ -74,6 +74,10 @@
 - report: document setup + description setup = overview diagram (2h30min)
 - report: introduction, literature, strategie (3h30)
 
+21/5 = 3h
+- extracted contrast-stretching parameter finding (1h)
+- cleaned up Makefile (15min)
+- cleaned up cropping (15min)
 ---
 total = 73h45
 ---
