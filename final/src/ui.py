@@ -25,6 +25,10 @@ from jaw_split                        import detect_splits, \
                                              draw_splits
 from teeth_isolation                  import detect_teeth_splits, \
                                              draw_teeth_separations
+from roi                              import create_roi, \
+                                             draw_roi
+from contours                         import detect_contours, \
+                                             draw_contours
 
 # global variables needed by UI
 wndName       = "ui"
@@ -136,8 +140,26 @@ def process():
   annotated = draw_teeth_separations(annotated, lines_lower, [255,255,0])
 
   # 5. ROI
+  roi_upper = create_roi(lines_upper)
+  roi_lower = create_roi(lines_lower) 
+    
+  annotated = draw_roi(annotated, roi_upper, (255,0,255))
+  annotated = draw_roi(annotated, roi_lower, (0,255,255))
   
   # 6. Contours
+  # upper
+  crown_contours_upper, root_contours_upper, \
+  histograms_upper, mus_upper, sigmas_upper = \
+    detect_contours(enhanced, roi_upper)
+  # lower
+  crown_contours_lower, root_contours_lower, \
+  histograms_lower, mus_lower, sigmas_lower = \
+    detect_contours(enhanced, roi_lower)
+  
+  annotated = draw_contours(annotated, crown_contours_upper, roi_upper)
+  annotated = draw_contours(annotated, crown_contours_lower, roi_lower)
+  annotated = draw_contours(annotated, root_contours_upper, roi_upper, [255,0,255])
+  annotated = draw_contours(annotated, root_contours_lower, roi_lower, [255,0,255])
   
   return annotated
 
@@ -159,7 +181,6 @@ def refresh(value):
 
   old_image      = image
   image          = cv.GetTrackbarPos("image",            wndName) + 1
-  print image, old_image
   # cropping
   width          = cv.GetTrackbarPos("width",            wndName)
   height         = cv.GetTrackbarPos("height",           wndName)

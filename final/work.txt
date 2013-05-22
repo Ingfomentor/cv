@@ -84,12 +84,17 @@
 22/5 = 
 - extracted create_histogram function (15min)
 - extracted detect_teeth_splits (15min)
-- continued work on ui.py = teeth isolation + configuration (1h30)
+- finalised ui.py (1h30min)
+
 ---
-total = 76h45
+total = 77h45
 ---
 
+- report: implementation segmentation
+- report: implementation contours
+- report: results
+- report: conclusion
+
 - turn point cloud into actual contour, outliers removed ()
-- report
 - presentation
 - process TODO
