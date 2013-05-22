@@ -34,6 +34,7 @@ MONTAGE_GRAPH=montage -label "%f" -geometry "200x150>+4+3"
 
 SRC_DIR=images
 IMAGES=$(notdir $(wildcard ${SRC_DIR}/*.tif))
+SEGMENTS=$(notdir $(wildcard ${SRC_DIR}/segmented/*.png))
 
 LC_CTYPE="C"
 
@@ -44,7 +45,9 @@ all: overviews
 
 overviews: cropped.png cropped_histograms.png sigmoids.png \
 					 enhanced.png enhanced_histograms.png \
-					 jaw_splits.png teeth_iso.png roi.png contours.png
+					 jaw_splits.png teeth_iso.png roi.png contours.png masks.png \
+					 comparison.png
+
 
 cropped.png: $(IMAGES:.tif=_crp.tif)
 	@echo "--- creating montage $@"
@@ -76,6 +79,9 @@ contours.png: $(IMAGES:.tif=_crp_enh_contours.tif)
 masks.png: $(IMAGES:.tif=_crp_enh_masks.tif)
 	@echo "--- creating montage $@"
 	@${MONTAGE} $^ $@
+comparison.png: ${SEGMENTS}
+	@echo "--- creating montage $@"
+	@${MONTAGE} -tile 8x $^ $@
 
 
 %_crp.tif: %.tif
@@ -145,6 +151,39 @@ masks.png: $(IMAGES:.tif=_crp_enh_masks.tif)
 %_masks.tif: %.tif %_masks.mat %_roi.mat
 	@echo "--- visualizing masks on $<"
 	@${PYTHON} src/visualize_masks.py $^ $@
+
+# UGLY AS HELL - but it allows for prerequisites
+%-0.png: ${SRC_DIR}/segmented/%-0.png %_crp_enh_masks.mat %_crp_enh_roi.mat
+	@echo "--- creating comparing mask for $@"
+	@${PYTHON} src/create_mask.py $^ $@ 0 ${CROP_WIDTH} ${CROP_HEIGHT} ${CROP_TOP_OFFSET}
+
+%-1.png: ${SRC_DIR}/segmented/%-1.png %_crp_enh_masks.mat %_crp_enh_roi.mat
+	@echo "--- creating comparing mask for $@"
+	@${PYTHON} src/create_mask.py $^ $@ 1 ${CROP_WIDTH} ${CROP_HEIGHT} ${CROP_TOP_OFFSET}
+
+%-2.png: ${SRC_DIR}/segmented/%-2.png %_crp_enh_masks.mat %_crp_enh_roi.mat
+	@echo "--- creating comparing mask for $@"
+	@${PYTHON} src/create_mask.py $^ $@ 2 ${CROP_WIDTH} ${CROP_HEIGHT} ${CROP_TOP_OFFSET}
+
+%-3.png: ${SRC_DIR}/segmented/%-3.png %_crp_enh_masks.mat %_crp_enh_roi.mat
+	@echo "--- creating comparing mask for $@"
+	@${PYTHON} src/create_mask.py $^ $@ 3 ${CROP_WIDTH} ${CROP_HEIGHT} ${CROP_TOP_OFFSET}
+
+%-4.png: ${SRC_DIR}/segmented/%-4.png %_crp_enh_masks.mat %_crp_enh_roi.mat
+	@echo "--- creating comparing mask for $@"
+	@${PYTHON} src/create_mask.py $^ $@ 4 ${CROP_WIDTH} ${CROP_HEIGHT} ${CROP_TOP_OFFSET}
+
+%-5.png: ${SRC_DIR}/segmented/%-5.png %_crp_enh_masks.mat %_crp_enh_roi.mat
+	@echo "--- creating comparing mask for $@"
+	@${PYTHON} src/create_mask.py $^ $@ 5 ${CROP_WIDTH} ${CROP_HEIGHT} ${CROP_TOP_OFFSET}
+
+%-6.png: ${SRC_DIR}/segmented/%-6.png %_crp_enh_masks.mat %_crp_enh_roi.mat
+	@echo "--- creating comparing mask for $@"
+	@${PYTHON} src/create_mask.py $^ $@ 6 ${CROP_WIDTH} ${CROP_HEIGHT} ${CROP_TOP_OFFSET}
+
+%-7.png: ${SRC_DIR}/segmented/%-7.png %_crp_enh_masks.mat %_crp_enh_roi.mat
+	@echo "--- creating comparing mask for $@"
+	@${PYTHON} src/create_mask.py $^ $@ 7 ${CROP_WIDTH} ${CROP_HEIGHT} ${CROP_TOP_OFFSET}
 
 ui:
 	@${PYTHON} src/ui.py ${CROP_WIDTH} ${CROP_HEIGHT} ${CROP_TOP_OFFSET} ${ALPHA} \

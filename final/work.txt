@@ -81,15 +81,16 @@
 - cleaned up cropping (15min)
 - implemented ui.py (started) (1h30min)
 
-22/5 = 7h30min
+22/5 = 9h30min
 - extracted create_histogram function (15min)
 - extracted detect_teeth_splits (15min)
 - finalised ui.py (1h30min)
 - introduced crop_top_offset (1h)
 - implemented masking (4h30min)
+- implemented mask comparing (2h)
 
 ---
-total = 85h15
+total = 87h15
 ---
 
 - report: implementation segmentation
