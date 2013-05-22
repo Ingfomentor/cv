@@ -69,12 +69,16 @@ def show(image, rois, contours):
   cv2.imshow('contour', image)
   cv2.waitKey(0)
 
-def draw_mask(image, roi, contour, fillcolor=[200,200,200], linecolor=[0,255,0]):
+def draw_mask(image, roi, contour, fillcolor=[200,200,200],
+              linecolor=[0,255,0], top=0, left=0):
   '''
   '''
   image = np.copy(image)
   
   contour = align_to_roi(contour, roi)
+
+  # add additional offset (used to create full-scale mask)
+  contour = contour + [left, top]
 
   if fillcolor != None:
     cv2.drawContours(image, [contour],  0, fillcolor, -1)
