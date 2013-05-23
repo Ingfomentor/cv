@@ -44,6 +44,18 @@
 
 \geometry{a4paper}
 
+% http://tex.stackexchange.com/questions/299/how-to-get-long-texttt-sections-to-break
+\newcommand*\justify{%
+  \fontdimen2\font=0.4em% interword space
+  \fontdimen3\font=0.2em% interword stretch
+  \fontdimen4\font=0.1em% interword shrink
+  \fontdimen7\font=0.1em% extra space
+  \hyphenchar\font=`\-% allowing hyphenation
+}
+
+% http://en.wikibooks.org/wiki/LaTeX/Customizing_LaTeX
+\newcommand{\ttt}[1]{{\tt \justify{#1}}}
+
 \author{Christophe Van Ginneken (s0084580) \\
 	\url{Christophe.VanGinneken@student.kuleuven.be} }
 \title{CV finaal project: Snijtand Segmentatie}
@@ -59,7 +71,7 @@ In dit project bestuderen we het segmenteren van snijtanden op basis van radiogr
 
 Dit rapport volgt dezelfde structuur: eerst worden enkele van de geconsulteerde rapporten kort toegelicht. Vervolgens wordt de geselecteerde strategie beschreven. De implementatie wordt tevens kort toegelicht en de uitdagingen die er in vervat zaten geanalyseerd. Tot slot worden de resultaten besproken en worden conclusies getrokken.
 
-De belangrijkste resultaten en code voorbeelden zijn opgenomen in dit rapport, het zij in de tekst, het zij in appendices. Alle broncode die gebruikt werd in de realisatie van de gekozen strategie, is ook online beschikbaar via \url{http://github.com/MyKULCourses/cv} in de folder {\tt final}.
+De belangrijkste resultaten en code voorbeelden zijn opgenomen in dit rapport, het zij in de tekst, het zij in appendices. Alle broncode die gebruikt werd in de realisatie van de gekozen strategie, is ook online beschikbaar via \url{http://github.com/MyKULCourses/cv} in de folder \ttt{final}.
 
 \section{Literatuur studie}
 
@@ -140,11 +152,11 @@ Vervolgens doorlopen we de implementatie chronologisch. Hierbij bespreken we de 
 
 \subsection{Setup}
 
-De resulterende code is hoofdzakelijk geschreven in Python, maakt gebruik van de OpenCV, NumPy en SciPy bibliotheken. Daarnaast werd geopteerd om de co\"ordinatie en aansturing van deze code te doen vanuit een doel-geori\"enteerde {\tt Makefile}. Hierdoor is er een sterke scheiding tussen configuratie en aansturing enerzijds en algoritme en uitvoering anderzijds. Zaken als bepalen welke bestanden geladen moeten worden of welke logica dient uitgevoerd te worden is op deze manier gecentraliseerd en niet verspreid over de verschillende Python bestanden.
+De resulterende code is hoofdzakelijk geschreven in Python, maakt gebruik van de OpenCV, NumPy en SciPy bibliotheken. Daarnaast werd geopteerd om de co\"ordinatie en aansturing van deze code te doen vanuit een doel-geori\"enteerde \ttt{Makefile}. Hierdoor is er een sterke scheiding tussen configuratie en aansturing enerzijds en algoritme en uitvoering anderzijds. Zaken als bepalen welke bestanden geladen moeten worden of welke logica dient uitgevoerd te worden is op deze manier gecentraliseerd en niet verspreid over de verschillende Python bestanden.
 
 Voor elke fase of handeling die uitgevoerd wordt, is een apart Python script voorzien. Deze zijn opgezet als modules, maar kunnen ook op zich uitgevoerd worden. In dit laatste geval zal het script zijn functionaliteit uitvoeren en het resultaat interactief laten zien op het scherm. Deze werking wordt geactiveerd indien er geen uitvoerbestand wordt meegegeven aan de oproep.
 
-Indien dit laatste wel wordt gedaan, is dit de naam van een {\tt Matlab} bestand met extensie {\tt .mat}. In plaats van de resultaten te visualiseren, worden deze nu opgeslagen in dit bestand. Deze bestanden worden tevens doorgegeven aan de volgende fase, waardoor er voor elke fase een onafhankelijke set van data- en uitvoer bestanden ontstaan. Het {\tt Matlab} formaat werd gekozen om wille van interoperabiliteit. Zo zijn de scripts om grafieken, zoals histogrammen, te visualiseren gerealiseerd als {\tt Matlab} scripts. Hierdoor zijn deze grafieken in dit verslag visueel conform aan geldende standaarden en kon ervaring op dit vlak hergebruikt worden.
+Indien dit laatste wel wordt gedaan, is dit de naam van een \ttt{Matlab} bestand met extensie \ttt{.mat}. In plaats van de resultaten te visualiseren, worden deze nu opgeslagen in dit bestand. Deze bestanden worden tevens doorgegeven aan de volgende fase, waardoor er voor elke fase een onafhankelijke set van data- en uitvoer bestanden ontstaan. Het \ttt{Matlab} formaat werd gekozen om wille van interoperabiliteit. Zo zijn de scripts om grafieken, zoals histogrammen, te visualiseren gerealiseerd als \ttt{Matlab} scripts. Hierdoor zijn deze grafieken in dit verslag visueel conform aan geldende standaarden en kon ervaring op dit vlak hergebruikt worden.
 
 Tot slot zijn er naast de interactieve manier om de resultaten te bekijken, ook overeenkomstige Python scripts gemaakt die de visualisatie realiseren naar een bestand.
 
@@ -155,55 +167,66 @@ De hele setup is visueel weergegeven in figuur \ref{fig:setup}: van boven naar o
 \[ \entrymodifiers={+++[F-]}
 \SelectTips{cm}{}
 \xymatrix {
-	*{origineel} 										\ar[d]_{\tt 01.tif} \\
-	\parbox{3.75cm}{\centering crop\_image.py} 					\ar[d]_{\tt 01\_crp.tif} \\
-	\parbox{3.75cm}{\centering create\_histogram.py} 			\ar[d]_{\tt 01\_crp.tif}^{\tt 01\_crp\_histogram.mat}
-		\ar[rr]^{\tt 01\_crp\_histogram.mat} &*{\hspace{2cm}} & \parbox{3.75cm}{\centering plot\_histogram.m} \\
-	\parbox{3.75cm}{\centering create\_enhanced\_image.py} 		\ar[d]	_{\tt 01\_crp\_enh.tif}	
-	&*{\hspace{2cm}} & \parbox{3.75cm}{\centering plot\_jaw\_histograms.m} \\
-	*+++[F=]{\parbox{3.75cm}{\centering jaw\_split.py}} 					\ar[d]_{\tt 01\_crp\_enh.tif}^{\tt 01\_crp\_enh\_jaw\_split.mat}
-		\ar[rru]^{\tt 01\_crp\_enh\_jaw\_split.mat}  \ar[rr]^{\tt 01\_crp\_enh\_jaw\_split.mat}_{\tt 01\_crp\_enh.tif}
-		&*{\hspace{2cm}} & \parbox{3.75cm}{\centering visualize\_jaw\_split.m} \\
-	*+++[F=]{\parbox{3.75cm}{\centering teeth\_isolation.py}} 				\ar[d]	^{\tt 01\_crp\_enh\_teeth\_iso.mat}
-		\ar[rr]^{\tt 01\_crp\_enh\_teeth\_iso.mat}_{\tt 01\_crp\_enh\_jaw\_split.mat} &*{\hspace{2cm}} & \parbox{3.75cm}{\centering visualize\_teeth\_isolation.py} \\
-	*+++[F=]{\parbox{3.75cm}{\centering roi.py}}							\ar[d]	_{\tt 01\_crp\_enh.tif}^{\tt 01\_crp\_enh\_roi.mat}
-		\ar[rr]^{\tt 01\_crp\_enh\_roi.mat}_{\tt 01\_crp\_enh\_teeth\_iso.mat} &*{\hspace{2cm}} & \parbox{3.75cm}{\centering visualize\_roi.py} \\
-	*+++[F=]{\parbox{3.75cm}{\centering contours.py}}
+	*{origineel} 											
+		\ar[d]_{\tt 01.tif} \\
+	\parbox{5.75cm}{\centering crop\_image.py} 
+		\ar[d]_{\tt 01\_crp.tif} \\
+	\parbox{5.75cm}{\centering create\_histogram.py} 
+		\ar[d]_{\tt 01\_crp.tif}^{\tt 01\_crp\_histogram.mat}
+		\ar[rr]^{\tt 01\_crp\_histogram.mat} &*{\hspace{2.5cm}} & \parbox{4cm}{\centering plot\_histogram.m} \\
+	\parbox{5.75cm}{\centering determine\_enhancement\_parameters.py} 
+		\ar[d]^{\tt 01\_crp\_enh.mat} 
+		\ar[rr]^{\tt 01\_crp\_enh.mat} &*{\hspace{2.5cm}} & \parbox{4cm}{\centering plot\_sigmoid.m} \\
+	\parbox{5.75cm}{\centering create\_enhanced\_image.py}
+		\ar[d]	_{\tt 01\_crp\_enh.tif}	 &*{\hspace{2.5cm}} & \parbox{4cm}{\centering plot\_jaw\_histograms.m} \\
+	*+++[F=]{\parbox{5.75cm}{\centering jaw\_split.py}}
+		\ar[d]_{\tt 01\_crp\_enh.tif}^{\tt 01\_crp\_enh\_jaw\_split.mat}
+		\ar[rru]^{\tt 01\_crp\_enh\_jaw\_split.mat}
+		\ar[rr]^{\tt 01\_crp\_enh\_jaw\_split.mat}_{\tt 01\_crp\_enh.tif} &*{\hspace{2.5cm}} & \parbox{4cm}{\centering visualize\_jaw\_split.py} \\
+	*+++[F=]{\parbox{5.75cm}{\centering teeth\_isolation.py}}
+		\ar[d]	^{\tt 01\_crp\_enh\_teeth\_iso.mat}
+		\ar[rr]^{\tt 01\_crp\_enh\_teeth\_iso.mat}_{\tt 01\_crp\_enh\_jaw\_split.mat} &*{\hspace{2.5cm}} & \parbox{4cm}{\centering visualize\_teeth\_isolation.py} \\
+	*+++[F=]{\parbox{5.75cm}{\centering roi.py}}					
+		\ar[d]	_{\tt 01\_crp\_enh.tif}^{\tt 01\_crp\_enh\_roi.mat}
+		\ar[rr]^{\tt 01\_crp\_enh\_roi.mat}_{\tt 01\_crp\_enh\_teeth\_iso.mat} &*{\hspace{2.5cm}} & \parbox{4cm}{\centering visualize\_roi.py} \\
+	*+++[F=]{\parbox{5.75cm}{\centering contours.py}}
 		\ar[rr]^{\tt 01\_crp\_enh\_contours.mat}_{\tt 01\_crp\_enh\_roi.mat}
-		\ar[d]^{\tt 01\_crp\_enh\_contours.mat}_{\tt 01\_crp\_enh\_roi.mat} &*{\hspace{2cm}} &  \parbox{3.75cm}{\centering visualize\_contours.py} \\
-	\parbox{3.75cm}{\centering create\_masks.py}
-		\ar[rr]^{\tt 01\_crp\_enh\_masks.mat} &*{\hspace{2cm}} &  \parbox{3.75cm}{\centering visualize\_masks.py} \\
+		\ar[d]^{\tt 01\_crp\_enh\_contours.mat}_{\tt 01\_crp\_enh\_roi.mat} &*{\hspace{2.5cm}} &  \parbox{4cm}{\centering visualize\_contours.py} \\
+	\parbox{5.75cm}{\centering mask.py}
+		\ar[rr]^{\tt 01\_crp\_enh\_masks.mat}_{\tt 01\_crp\_enh\_roi.mat} 
+		\ar[d]^{\tt 01\_crp\_enh\_masks.mat}_{\tt 01\_crp\_enh\_roi.mat} &*{\hspace{2cm}} &  \parbox{4cm}{\centering visualize\_masks.py} \\
+	\parbox{5.75cm}{\centering compare\_mask.py}	
 }
 \]
 \caption{Overzicht setup en werking}
 \label{fig:setup}
 \end{figure}
 
-Het originele beeld wordt eerst voorbereid. Hierbij wordt het algemeen bijgesneden ({\tt crop\_image.py}) tot een beeld dat hoofdzakelijk de tanden bevat. Vervolgens wordt van dit beeld een histogram van de intensiteiten gemaakt ({\tt create\_histogram.py}). Aan de hand van dit histogram wordt het beeld vervolgens verbeterd ({\tt create\_enhanced\_image.py}). Dit zijn algemene acties die het beeld voorbereiden voor het effectieve algoritme.
+Het originele beeld wordt eerst voorbereid. Hierbij wordt het zeer algemeen bijgesneden (\ttt{crop\_image.py}) tot een beeld dat hoofdzakelijk de tanden bevat. Vervolgens wordt van dit beeld een histogram van de intensiteiten gemaakt (\ttt{create\_histogram.py}). Aan de hand van dit histogram wordt het beeld vervolgens verbeterd: eerst worden de parameters bepaald van de normalisatie functie (\ttt{determine\_enhancement \_parameters.py}) en vervolgens wordt het beeld effectief verbeterd (\ttt{create\_enhanced\_image.py}). Dit zijn algemene acties die het beeld voorbereiden voor het effectieve algoritme.
 
-Dit algoritme bestaat uit 4 fasen. Deze zijn in figuur \ref{fig:setup} weergegeven met dubbele omkaderende lijnen. Eerst wordt een splitsing gemaakt tussen de boven- en onderkaak ({\tt jaw\_split.py}). Dan worden voor elk van deze kaken, splitsingen gezicht tussen de vier middelste tanden, waardoor deze ge\"isoleerd worden ({\tt teeth\_isolation}). Op basis van deze splitsingen worden dan rechthoekige afbakeningen van de interessante regio gemaakt, de zgn. \emph{Region Of Interest of ROI} ({\tt roi.py}). Tot slot wordt binnen deze ROI's gezocht naar de contour van de tand ({\tt contours.py}).
+Dit algoritme bestaat uit vier grote fasen. Deze zijn in figuur \ref{fig:setup} weergegeven met dubbele omkaderende lijnen. Eerst wordt een splitsing gemaakt tussen de boven- en onderkaak (\ttt{jaw\_split.py}). Dan worden voor elk van deze kaken, splitsingen gezocht tussen de vier middelste tanden, waardoor deze ge\"isoleerd worden (\ttt{teeth\_isolation.py}). Op basis van deze splitsingen worden dan rechthoekige afbakeningen van de interessante regio gemaakt, de zgn. \emph{Region Of Interest of ROI} (\ttt{roi.py}). Tot slot wordt binnen deze ROI's gezocht naar de contour van de tand (\ttt{contours.py}).
 
-De opdracht voorziet dat binaire maskeringen aangemaakt worden. Een laatste stap in het proces voorziet de generatie van zulke maskeringen ({\tt create\_masks.py}).
+De contouren die bekomen worden zijn soms redelijk ruw ten gevolgen van ``fouten''. In de naverwerking worden deze contouren verzacht om zo definitieve contouren van de maskers te bekomen (\ttt{mask.py}). Tot slot worden nog visuele vergelijking gemaakt van de gekende maskers t.o.v. de zelf bepaalde maskers (\ttt{compare\_mask.py})
 
 \subsection{Voorbereiding}
 
 Vooralleer de segmentatie en contour afbakening kan gebeuren, is het aangewezen om het originele beeld voor te bereiden. De originele beelden zijn zeer ruim in functie van de scope van de opdracht. De opdracht focust op de acht snijtanden, daar waar de originele beelden de volledige kaken beslaan. Daarom werd besloten om als eerste stap een zeer ruwe ROI te bepalen, een zgn. macro-ROI.
 
-Vervolgens dient ook het contrast verbeterd te worden. Hiervoor werd de techniek \emph{contrast stretching} uit  \cite{piotrowski2000active} en \cite{said2004dental} gehanteerd.
+Vervolgens dient ook het contrast verbeterd te worden. Hiervoor werd de techniek \emph{contrast stretching}, waar ook in  \cite{piotrowski2000active} en \cite{said2004dental} naar verwezen werd, gehanteerd.
 
 \subsubsection{Bepalen macro-ROI}
 
-De originele beelden laten toe om de sterke structurele gelijkenissen uit te buiten en het volledige beeld te herleiden tot een kleiner beeld waar zich alleen de zone op bevindt die belangrijk is in dit project. Zonder te zoeken naar optimale maten, werd een ruwe bijsnijding ge\"implementeerd die het beeld herleidde tot een centrale regio van 700 pixels breed en 1100 pixels hoog\footnote{De originele beelden zijn 3023 breed en 1597 hoog.}.
+De originele beelden laten toe om de sterke structurele gelijkenissen uit te buiten en het volledige beeld te herleiden tot een kleiner beeld waar zich alleen de zone op bevindt die belangrijk is in dit project. Zonder te zoeken naar optimale maten, werd een ruwe bijsnijding ge\"implementeerd die het beeld herleidde tot een centrale regio van 700 pixels breed en 850 pixels hoog\footnote{De originele beelden zijn 3023 breed en 1597 hoog.}.
 
-Zoals blijkt uit het overzicht van de voorbereide originele beelden in appendix \ref{appendix:prepared-originals}, kan deze bijsnijding eigenlijk nog verbeterd worden en kan vooral aan de bovenkant nog meer onnuttig beeldmateriaal verwijderd worden. Er is geopteerd om deze geleide operaties zo algemeen mogelijk uit te voeren om zo min mogelijke manuele interferentie te noodzaken. Hierdoor zijn de voorbereidingen redelijk ruw, maar zo weerspiegelen hopelijk de resultaten de kwaliteiten van de strategie in een geautomatiseerde omgeving waar zo min mogelijk interventie nodig is.
+Zoals blijkt uit het overzicht van de voorbereide originele beelden in appendix \ref{appendix:prepared-originals}, kan deze bijsnijding is veel gevallen nog verbeterd worden. Er is echter geopteerd om deze begeleide operaties zo algemeen mogelijk uit te voeren om zo min mogelijke manuele interferentie te noodzaken. Hierdoor zijn de voorbereidingen redelijk ruw, maar zo weerspiegelen hopelijk de resultaten de kwaliteiten van de strategie in een geautomatiseerde omgeving waar zo min mogelijk interventie nodig is.
 
-We merken op dat een aantal van de originele beelden problematische eigenschappen vertonen zoals schaduwen, corrigerende beugels en blokjes. Daarnaast zijn er ook een aantal beelden met sterk vervormde structuren.
+We kunnen nu reeds opmerken dat een aantal van de originele beelden problematische eigenschappen vertonen zoals schaduwen, corrigerende beugels en blokjes. Daarnaast zijn er ook een aantal beelden met sterk vervormde tand-formaties.
 
 \subsubsection{Verbeteren van het contrast}
 
 Radiografie-beelden zijn gekenmerkt door een veelheid aan grijstinten en wazige overgangen. Omdat we op basis van histogrammen van intensiteiten splitsingen willen gaan bepalen, is het belangrijk dat er een duidelijk onderscheid is tussen donkere en lichte zones. Om deze reden is het belangrijk om te zorgen voor een accentuering van het contrast, waarbij donkere zones expliciet donkerder gemaakt worden lichtere zones lichter. Een techniek die dit doet is het zogenaamde \emph{contrast stretching}.
 
-Zoals de naam doet vermoeden trachten we bij \emph{contrast stretching} het contrast dat er is zo uit te rekken, dat het nadrukkelijker aanwezig is. Om dit te doen, werken we met een histogram van de intensiteiten van de grijs-waarden en defini‘ren we een transformatie van deze intensiteiten. Figuur \ref{fig:contrast-stretching-histograms} toont het histogram voor en na \emph{contrast stretching}. Het is duidelijk dat de intensiteiten nu als het ware uitgerokken zijn over het volledige spectrum en dat de stretching vooral in de middelste zone gebeurd is. Merk op dat door het uitrekken er ook gaten ontstaan.
+Zoals de naam doet vermoeden trachten we bij \emph{contrast stretching} het contrast dat er is, zo uit te rekken, dat het nadrukkelijker aanwezig is. Om dit te doen, werken we met een histogram van de intensiteiten van de grijs-waarden en defini\"eren we een transformatie van deze intensiteiten. Figuur \ref{fig:contrast-stretching-histograms} toont een histogram voor en na \emph{contrast stretching}. Het is duidelijk dat de intensiteiten nu als het ware uitgerokken zijn over het volledige spectrum en dat de stretching vooral in de middelste zone gebeurd is. Merk op dat door het uitrekken er ook gaten ontstaan.
 
 \begin{figure}
 \centering
@@ -220,24 +243,35 @@ Zoals de naam doet vermoeden trachten we bij \emph{contrast stretching} het cont
   \label{fig:enhanced-histogram}
 \end{subfigure}
 \label{fig:contrast-stretching-histograms}
-% \caption{Histogrammen voor en na contrast stretching van {\tt 01_crp.tif}}
+\caption{Histogrammen voor en na contrast stretching van \ttt{01\_crp.tif}}
 \end{figure}
 
-Als transformatiefunctie werd een \emph{sigmoid} functie gebruikt weergegeven door vergelijking \ref{eq:sigmoid}.
+Als transformerende functie werd een \emph{sigmoid} functie gebruikt. Vergelijking \ref{eq:sigmoid-standard} toont de algemene vorm.
 
-\begin{equation} \label{eq:sigmoid}
+\begin{equation} \label{eq:sigmoid-standard}
+(newMax - newMin) \frac{1}{1+e^{-\frac{I - \beta}{\alpha}}} + newMin
+\end{equation}
+
+In dit concrete geval beelden het intensiteiten interval $[0..255]$ opnieuw af op $[0..255]$. Indien we deze grenzen invullen in de vergelijking bekomen we vergelijking \ref{eq:sigmoid-impl} die in de implementatie gebruikt wordt.
+
+\begin{equation} \label{eq:sigmoid-impl}
 \frac{255}{1+e^{-\frac{I - \beta}{\alpha}}}
 \end{equation}
 
-Figuur \ref{fig:sigmoid} toont het verloop van deze transformatie.
+Figuur \ref{fig:sigmoid} toont het verloop van deze transformatie. 
 
 \begin{figure}
-%  \includegraphics[width=.5\linewidth]{../01_crp_sigmoid.eps}
-%  \caption{Sigmoid-gebaseerde normalisatie transformatie voor {\tt 01_crp.tif}}
-  \label{fig:original-histogram}
+\centering
+ \includegraphics[width=.5\linewidth]{../01_crp_enh_sigmoid.eps}
+\caption{Sigmoid-gebaseerde normalisatie transformatie voor \ttt{01\_crp.tif}}
+ \label{fig:sigmoid}
 \end{figure}
 
+Op deze figuur kunnen we heel goed zien hoe de $\beta$ parameter de ligging van de sigmoid bepaalt. De waarde van $\beta$ bepaalt het middelpunt van de getransformeerde waarden. De waarde wordt bepaald door een analyse van het histogram. Hierbij wordt gezocht naar de gemiddelde intensiteit rond het zwaartepunt van het histogram.
 
+Voor de $\alpha$ waarde wordt gezocht naar de breedte van het interval dat het zwaartepunt uitmaakt van het histogram. In praktijk bleek dit niet zo eenvoudig te bepalen en werd na enkele experimenten geopteerd om voor deze implementatie een vaste waarde te kiezen. Deze werd vastgesteld op $20$.
+
+\subsubsection{Resultaat van de voorbereidende verbeteringen}
 
 Figuur \ref{fig:preparation} geeft een visueel overzicht van de evolutie van origineel beeld tot bijgesneden beeld met verbeterd contrast.
 
@@ -261,10 +295,13 @@ Figuur \ref{fig:preparation} geeft een visueel overzicht van de evolutie van ori
   \caption{Verbeterd contrast}
   \label{fig:cropped}
 \end{subfigure}
-\caption{Evolutie tijdens de voorbereiding van {\tt 01.tif}.}
+\caption{Evolutie tijdens de voorbereiding van \ttt{01.tif}.}
 \label{fig:preparation}
 \end{figure}
 
+We zien in dit voorbeeld onmiddellijk dat er zich een probleem kan en zal voordoen: centraal over de kronen van de tanden bevindt zich een donkere band. Door toepassen van een globale normalisatie, blijven natuurlijk de onderlinge contrasten wel bestaan. Een mogelijke oplossing voor dit probleem kan bestaan in het adaptief toepassen van \emph{contrast stretching}. Hierbij wordt het beeld in kleinere deelgebieden opgedeeld, waarvoor telkens een lokaal histogram wordt gemaakt. Op deze manier moet het mogelijk zijn om de donkere zones onafhankelijk van de andere gebieden op te lichten, waardoor op globaal niveau de verschillen weggewerkt zouden kunnen worden.
+
+\cite{srinivasan2006adaptive} beschrijft een aanpak in deze richting die mogelijk kan toegepast worden. Wegens tijdsbeperkingen werd deze piste niet verder onderzocht.
 
 \subsection{Segmentatie}
 
@@ -293,7 +330,7 @@ TODO
 \label{appendix:prepared-originals}
 
 \begin{figure}[H]
-\includegraphics[width=\linewidth]{../prepared.png}
+\includegraphics[width=\linewidth]{../enhanced.png}
 \caption{Voorbereide originele beelden.}
 \label{fig:prepared-originals}
 \end{figure}

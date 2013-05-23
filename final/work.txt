@@ -89,6 +89,9 @@
 - implemented masking (4h30min)
 - implemented mask comparing (2h)
 
+23/5 =
+- fixed various small things (rename, legends,...) (1h)
+- report: completed implementation enhancement (1h)
 ---
 total = 87h15
 ---
