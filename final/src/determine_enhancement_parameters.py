@@ -28,7 +28,9 @@ def calc_beta(histogram):
   indices = indices[indices<225]
   
   # average the top-10
-  return np.uint8(np.average(indices[0:9]))
+  average = np.uint8(np.average(indices[0:9]))
+  
+  return average - 20
 
 
 # this part of the code is only executed if the file is run stand-alone
