@@ -2,8 +2,9 @@
 Final project: Teeth Segmentation
 @author Christophe VG
 
-Creates a full sized mask for one specific incisor. It is based on the provided
-segmented files and masks corresponding pixels green and incorret pixels red.
+Creates a mask visualisation of one specific incisor. It uses the provided
+segmented files and masks corresponding pixels green, incorrect pixels red and
+missing pixels blue.
 '''
 
 import sys
