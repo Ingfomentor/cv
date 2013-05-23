@@ -29,8 +29,9 @@ OCTAVE=/opt/local/bin/octave --silent \
                              --eval "addpath(strcat(pwd,'/src'));" \
                              --eval "warning('off', 'print:missing_fig2dev');" \
                              --eval "warning('off', 'print:missing_pstoedit');"
-MONTAGE=montage -label "%f" -geometry "140x170>+4+3"
-MONTAGE_GRAPH=montage -label "%f" -geometry "200x150>+4+3"
+MONTAGE=montage -label "%f" -geometry "140x170>+4+3" -tile 5x
+MONTAGE_GRAPH=montage -label "%f" -geometry "200x150>+4+3" -tile 5x
+CONVERT=convert
 
 SRC_DIR=images
 IMAGES=$(notdir $(wildcard ${SRC_DIR}/*.tif))
@@ -46,7 +47,7 @@ all: overviews jaw_histograms
 overviews: cropped.png cropped_histograms.png sigmoids.png \
 					 enhanced.png enhanced_histograms.png \
 					 jaw_splits.png teeth_iso.png roi.png contours.png masks.png \
-					 comparison.png
+					 comparison-0.png comparison-1.png
 
 
 cropped.png: $(IMAGES:.tif=_crp.tif)
@@ -82,6 +83,9 @@ masks.png: $(IMAGES:.tif=_crp_enh_masks.tif)
 comparison.png: ${SEGMENTS}
 	@echo "--- creating montage $@"
 	@${MONTAGE} -tile 8x $^ $@
+comparison-0.png comparison-1.png: comparison.png
+	@echo "--- splitting $<"
+	@${CONVERT} -crop 1184x1940 $< $<
 
 jaw_histograms: $(IMAGES:.tif=_crp_enh_jaw_split_histograms.eps)
 
