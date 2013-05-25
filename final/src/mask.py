@@ -34,7 +34,7 @@ def smooth_contour(contour):
   
   image = np.zeros([500,500,3], np.float32)
   
-  # shift contour
+  # draw the contour
   cv2.drawContours(image, [contour],  0, [255,255,255], 1)
 
   # dilate

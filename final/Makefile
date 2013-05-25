@@ -212,7 +212,7 @@ dist:
 	@rm -rf ${DIST_DIR}
 
 clean:
-	@${RM} *.{png,eps,tif}
+	@${RM} *.{png,eps,tif,pdf}
 	@${RM} verslag/*.{aux,log,synctex.gz}
 
 mrproper: clean
