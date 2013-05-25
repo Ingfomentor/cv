@@ -1,0 +1,40 @@
+\newcommand{\etalchar}[1]{$^{#1}$}
+\begin{thebibliography}{AMNN{\etalchar{+}}03}
+
+\bibitem[AMNN{\etalchar{+}}03]{abdel2003challenges}
+Mohamed Abdel-Mottaleb, Omaima Nomir, Diaa~Eldin Nassar, Gamal Fahmy, and
+  Hany~H Ammar.
+\newblock Challenges of developing an automated dental identification system.
+\newblock In {\em Circuits and Systems, 2003 IEEE 46th Midwest Symposium on},
+  volume~1, pages 411--414. IEEE, 2003.
+
+\bibitem[CJ04]{chen2004tooth}
+Hong Chen and Anil~K Jain.
+\newblock Tooth contour extraction for matching dental radiographs.
+\newblock In {\em Pattern Recognition, 2004. ICPR 2004. Proceedings of the 17th
+  International Conference on}, volume~3, pages 522--525. IEEE, 2004.
+
+\bibitem[JC04]{jain2004matching}
+Anil~K Jain and Hong Chen.
+\newblock Matching of dental x-ray images for human identification.
+\newblock {\em Pattern recognition}, 37(7):1519--1532, 2004.
+
+\bibitem[PS00]{piotrowski2000active}
+Marek Piotrowski and Piotr~S Szczepaniak.
+\newblock Active contour based segmentation of low-contrast medical images.
+\newblock In {\em Advances in Medical Signal and Information Processing, 2000.
+  First International Conference on (IEE Conf. Publ. No. 476)}, pages 104--109.
+  IET, 2000.
+
+\bibitem[SB06]{srinivasan2006adaptive}
+S~Srinivasan and N~Balram.
+\newblock Adaptive contrast enhancement using local region stretching.
+\newblock In {\em The 9th Asian Symposium on Information Display (ASID'06), New
+  Delhi, India}, 2006.
+
+\bibitem[SFNA04]{said2004dental}
+Eyad Said, Gamal~F Fahmy, Diaa Nassar, and Hany Ammar.
+\newblock Dental x-ray image segmentation.
+\newblock In {\em Proceedings of SPIE}, volume 5404, pages 409--417, 2004.
+
+\end{thebibliography}
