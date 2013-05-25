@@ -42,24 +42,26 @@ LC_CTYPE="C"
 VPATH = ${SRC_DIR}
 
 
-all: overviews jaw_histograms
+all: overviews
 
-overviews: cropped.png cropped_histograms.png sigmoids.png \
-					 enhanced.png enhanced_histograms.png \
-					 jaw_splits.png teeth_iso.png roi.png contours.png masks.png \
+overviews: cropped.png cropped_hists.png sigmoids.png \
+					 enhanced.png enhanced_hists.png \
+					 jaw_splits.png jaw_splits_hists.png \
+					 teeth_iso.png teeth_iso_hists.png roi.png \
+					 contours.png masks.png \
 					 comparison-0.png comparison-1.png
 
 
 cropped.png: $(IMAGES:.tif=_crp.tif)
 	@echo "--- creating montage $@"
 	@${MONTAGE} $^ $@
-cropped_histograms.png: $(IMAGES:.tif=_crp_histogram.eps)
+cropped_hists.png: $(IMAGES:.tif=_crp_hist.eps)
 	@echo "--- creating montage $@"
 	@${MONTAGE_GRAPH} $^ $@
 enhanced.png: $(IMAGES:.tif=_crp_enh.tif)
 	@echo "--- creating montage $@"
 	@${MONTAGE} $^ $@
-enhanced_histograms.png: $(IMAGES:.tif=_crp_enh_histogram.eps)
+enhanced_hists.png: $(IMAGES:.tif=_crp_enh_hist.eps)
 	@echo "--- creating montage $@"
 	@${MONTAGE_GRAPH} $^ $@
 sigmoids.png: $(IMAGES:.tif=_crp_enh_sigmoid.eps)
@@ -68,9 +70,15 @@ sigmoids.png: $(IMAGES:.tif=_crp_enh_sigmoid.eps)
 jaw_splits.png: $(IMAGES:.tif=_crp_enh_jaw_split.tif)
 	@echo "--- creating montage $@"
 	@${MONTAGE} $^ $@
+jaw_splits_hists.png: $(IMAGES:.tif=_crp_enh_jaw_split_hists.eps)
+	@echo "--- creating montage $@"
+	@${MONTAGE_GRAPH} $^ $@
 teeth_iso.png: $(IMAGES:.tif=_crp_enh_teeth_iso.tif)
 	@echo "--- creating montage $@"
 	@${MONTAGE} $^ $@
+teeth_iso_hists.png: $(IMAGES:.tif=_crp_enh_teeth_iso_hists.eps)
+	@echo "--- creating montage $@"
+	@${MONTAGE_GRAPH} $^ $@
 roi.png: $(IMAGES:.tif=_crp_enh_roi.tif)
 	@echo "--- creating montage $@"
 	@${MONTAGE} $^ $@
@@ -87,21 +95,19 @@ comparison-0.png comparison-1.png: comparison.png
 	@echo "--- splitting $<"
 	@${CONVERT} -crop 1184x1940 $< $<
 
-jaw_histograms: $(IMAGES:.tif=_crp_enh_jaw_split_histograms.eps)
-
 %_crp.tif: %.tif
 	@echo "--- cropping image $<"
 	@${PYTHON} src/crop_image.py $< $@ ${CROP_WIDTH} ${CROP_HEIGHT} ${CROP_TOP_OFFSET}
 
-%_histogram.mat: %.tif
-	@echo "--- creating histogram for $<"
+%_hist.mat: %.tif
+	@echo "--- creating hist for $<"
 	@${PYTHON} src/create_histogram.py $< $@
 
-%_histogram.eps: %_histogram.mat
-	@echo "--- visualizing histogram $<"
+%_hist.eps: %_hist.mat
+	@echo "--- visualizing hist $<"
 	@${OCTAVE} --eval "plot_histogram( '$<', '$@');" > /dev/null
 
-%_enh.mat: %_histogram.mat
+%_enh.mat: %_hist.mat
 	@echo "--- determining enhancement parameters of $<"
 	@${PYTHON} src/determine_enhancement_parameters.py $^ ${ALPHA} $@
 
@@ -117,8 +123,8 @@ jaw_histograms: $(IMAGES:.tif=_crp_enh_jaw_split_histograms.eps)
 	@echo "--- detecting jaw split for $<"
 	@${PYTHON} src/jaw_split.py $< ${SLICES} ${EXPECTED_JAW_SPLIT} ${SIGMA} ${INVERSION_TOP} $@ 
 
-%_jaw_split_histograms.eps: %_jaw_split.mat
-	@echo "--- visualizing jaw split histograms from $<"
+%_jaw_split_hists.eps: %_jaw_split.mat
+	@echo "--- visualizing jaw split hists from $<"
 	@${OCTAVE} --eval "plot_jaw_histograms( '$<', '$@');" > /dev/null
 
 %_jaw_split.tif: %.tif %_jaw_split.mat
@@ -128,6 +134,10 @@ jaw_histograms: $(IMAGES:.tif=_crp_enh_jaw_split_histograms.eps)
 %_teeth_iso.mat: %.tif %_jaw_split.mat
 	@echo "--- isolating incisors for $<"
 	@${PYTHON} src/teeth_isolation.py $^ ${UPPER_LENGTH} ${LOWER_LENGTH} $@
+	
+%_teeth_iso_hists.eps: %_teeth_iso.mat
+	@echo "--- visualizing teeth isolation hists from $<"
+	@${OCTAVE} --eval "plot_teeth_isolation_histograms( '$<', '$@');" > /dev/null
 
 %_teeth_iso.tif: %.tif %_jaw_split.mat %_teeth_iso.mat
 	@echo "--- visualizing incisors for $<"
@@ -216,5 +226,5 @@ mrproper: clean
 	@${RM} *.mat
 	@${RM} verslag/verslag.pdf
 
-.PRECIOUS: %_histogram.mat %_histogram.eps %_enh.mat %_jaw_split.mat %_teeth_iso.mat %_roi.mat %_contours.mat %_masks.mat
-.SECONDARY: %_histogram.mat %_histogram.eps %_enh.mat %_jaw_split.mat %_teeth_iso.mat %_roi.mat %_contours.mat %_masks.mat
+.PRECIOUS: %_hist.mat %_hist.eps %_enh.mat %_jaw_split.mat %_teeth_iso.mat %_roi.mat %_contours.mat %_masks.mat
+.SECONDARY: %_hist.mat %_hist.eps %_enh.mat %_jaw_split.mat %_teeth_iso.mat %_roi.mat %_contours.mat %_masks.mat
