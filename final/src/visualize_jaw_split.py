@@ -35,7 +35,7 @@ splits_lower = data['splits_lower']
 spline_upper = reconstruct_spline_tuple(data, 'upper')
 spline_lower = reconstruct_spline_tuple(data, 'lower')
 
-annotated = draw_splits(image,     splits_upper)
+annotated = draw_splits(image,     splits_upper, color=(0,0,255))
 annotated = draw_spline(annotated, spline_upper)
 annotated = draw_splits(annotated, splits_lower)
 annotated = draw_spline(annotated, spline_lower)
