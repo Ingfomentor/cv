@@ -5,18 +5,18 @@ function plot_jaw_histograms(data_file, image_file)
   slices = size(histograms)(1);
 
   % create figure, plot histogram data and save to requested file
-  fh = figure('Position',[100,100,1000,2000]);
+  fh = figure;
   hold on
   
-  for slice = [1:slices]
+  for slice = slices:-1:1
     histogram   = histograms(slice,:);
     split_upper = splits_upper(slice);
     split_lower = splits_lower(slice);
     top = max(histogram) * 1.1
     len = length(histogram)
 
-    subplot(slices, 1, slice)
-    plot(histogram);
+    subplot(slices, 1, slices-slice+1)
+    plot(histogram, 'lineWidth', 4);
     hold on
     plot([split_upper,split_upper],[0,top], 'r', 'lineWidth', 4)
     plot([split_lower,split_lower],[0,top], 'g', 'lineWidth', 4)
