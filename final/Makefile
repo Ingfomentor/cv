@@ -49,8 +49,8 @@ overviews: cropped.png cropped_hists.png sigmoids.png \
 					 jaw_splits.png jaw_splits_hists.png \
 					 teeth_iso.png teeth_iso_hists.png roi.png \
 					 contours.png masks.png \
-					 comparison-0.png comparison-1.png
-
+					 comparison-0.png comparison-1.png \
+					 crown_histograms-0.png crown_histograms-1.png
 
 cropped.png: $(IMAGES:.tif=_crp.tif)
 	@echo "--- creating montage $@"
@@ -94,6 +94,13 @@ comparison.png: ${SEGMENTS}
 comparison-0.png comparison-1.png: comparison.png
 	@echo "--- splitting $<"
 	@${CONVERT} -crop 1184x1940 $< $<
+crown_histograms.png: $(SEGMENTS:.png=_crown_hist.eps)
+	@echo "--- creating montage $@"
+	@${MONTAGE_GRAPH} -tile 8x $^ $@
+crown_histograms-0.png crown_histograms-1.png: crown_histograms.png
+	@echo "--- splitting $<"
+	@${CONVERT} -crop 1664x1740 $< $<
+
 
 %_crp.tif: %.tif
 	@echo "--- cropping image $<"
@@ -167,38 +174,24 @@ comparison-0.png comparison-1.png: comparison.png
 	@echo "--- visualizing masks on $<"
 	@${PYTHON} src/visualize_masks.py $^ $@
 
-# UGLY AS HELL - but it allows for prerequisites
-%-0.png: ${SRC_DIR}/segmented/%-0.png %_crp_enh_masks.mat %_crp_enh_roi.mat
-	@echo "--- creating comparing mask for $@"
-	@${PYTHON} src/compare_mask.py $^ $@ 0 ${CROP_WIDTH} ${CROP_HEIGHT} ${CROP_TOP_OFFSET}
+# UGLY AS HELL - but it allows for prerequisites ;-)
 
-%-1.png: ${SRC_DIR}/segmented/%-1.png %_crp_enh_masks.mat %_crp_enh_roi.mat
-	@echo "--- creating comparing mask for $@"
-	@${PYTHON} src/compare_mask.py $^ $@ 1 ${CROP_WIDTH} ${CROP_HEIGHT} ${CROP_TOP_OFFSET}
+define SEGMENT
+%-$(1).png: ${SRC_DIR}/segmented/%-$(1).png %_crp_enh_masks.mat %_crp_enh_roi.mat
+	@echo "--- creating comparing mask for $$@"
+	@${PYTHON} src/compare_mask.py $$^ $$@ $(1) ${CROP_WIDTH} ${CROP_HEIGHT} ${CROP_TOP_OFFSET}
+endef
 
-%-2.png: ${SRC_DIR}/segmented/%-2.png %_crp_enh_masks.mat %_crp_enh_roi.mat
-	@echo "--- creating comparing mask for $@"
-	@${PYTHON} src/compare_mask.py $^ $@ 2 ${CROP_WIDTH} ${CROP_HEIGHT} ${CROP_TOP_OFFSET}
+$(foreach i,0 1 2 3 4 5 6 7,$(eval $(call SEGMENT,$(i))))
 
-%-3.png: ${SRC_DIR}/segmented/%-3.png %_crp_enh_masks.mat %_crp_enh_roi.mat
-	@echo "--- creating comparing mask for $@"
-	@${PYTHON} src/compare_mask.py $^ $@ 3 ${CROP_WIDTH} ${CROP_HEIGHT} ${CROP_TOP_OFFSET}
+define CROWN
+%-$(1)_crown_hist.eps: %_crp_enh_contours.mat
+	@echo "--- creating crown histogram $(1) from $$<"
+	@${OCTAVE} --eval "plot_crown_histogram('$$<', $(1), '$$@')" > /dev/null
+endef
 
-%-4.png: ${SRC_DIR}/segmented/%-4.png %_crp_enh_masks.mat %_crp_enh_roi.mat
-	@echo "--- creating comparing mask for $@"
-	@${PYTHON} src/compare_mask.py $^ $@ 4 ${CROP_WIDTH} ${CROP_HEIGHT} ${CROP_TOP_OFFSET}
+$(foreach i,0 1 2 3 4 5 6 7,$(eval $(call CROWN,$(i))))
 
-%-5.png: ${SRC_DIR}/segmented/%-5.png %_crp_enh_masks.mat %_crp_enh_roi.mat
-	@echo "--- creating comparing mask for $@"
-	@${PYTHON} src/compare_mask.py $^ $@ 5 ${CROP_WIDTH} ${CROP_HEIGHT} ${CROP_TOP_OFFSET}
-
-%-6.png: ${SRC_DIR}/segmented/%-6.png %_crp_enh_masks.mat %_crp_enh_roi.mat
-	@echo "--- creating comparing mask for $@"
-	@${PYTHON} src/compare_mask.py $^ $@ 6 ${CROP_WIDTH} ${CROP_HEIGHT} ${CROP_TOP_OFFSET}
-
-%-7.png: ${SRC_DIR}/segmented/%-7.png %_crp_enh_masks.mat %_crp_enh_roi.mat
-	@echo "--- creating comparing mask for $@"
-	@${PYTHON} src/compare_mask.py $^ $@ 7 ${CROP_WIDTH} ${CROP_HEIGHT} ${CROP_TOP_OFFSET}
 
 ui:
 	@${PYTHON} src/ui.py ${CROP_WIDTH} ${CROP_HEIGHT} ${CROP_TOP_OFFSET} ${ALPHA} \

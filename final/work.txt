@@ -97,11 +97,11 @@
 - report: implementation jaw segmentation (1h)
 - added plot_teeth_isolation_hists.m (15min)
 - report: implementation teeth isolation (1h)
+- added plot_crown_histogram.m (1h)
 ---
 total = 87h15
 ---
 
-- report: implementation segmentation
 - report: implementation contours
 - report: results
 - report: conclusion
