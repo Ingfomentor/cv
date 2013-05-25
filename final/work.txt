@@ -98,6 +98,7 @@
 - added plot_teeth_isolation_hists.m (15min)
 - report: implementation teeth isolation (1h)
 - added plot_crown_histogram.m (1h)
+- report: implementation contours (1h45min)
 ---
 total = 87h15
 ---

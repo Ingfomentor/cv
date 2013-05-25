@@ -124,7 +124,7 @@ Initieel kent het artikel een zeer lange beschrijvende inleiding, waarin de cont
 
 Vervolgens wordt opgemerkt dat voor segmentatie twee strategie\"en kunnen gevolgd worden: enerzijds de extractie op basis van regionale kenmerken en anderzijds op basis van modellen. Deze laatste strategie is complexer, maar dikwijls meer succesvol.
 
-De methodologie gaat tot slot verder met een uitermate sumiere beschrijving van de segmentatie door middel van 2D wavelets en concludeert dat deze aanpak veruit de beste is, in vergelijking met andere aanpakken.
+De methodologie gaat tot slot verder met een uitermate summiere beschrijving van de segmentatie door middel van 2D wavelets en concludeert dat deze aanpak veruit de beste is, in vergelijking met andere aanpakken.
 
 \subsection{Matching of dental X-ray images for human identification}
 
@@ -376,6 +376,7 @@ Om vervolgens de individuele tanden te segmenteren, gaat het algoritme er van ui
 \end{subfigure}
 \caption{Bepalen van splitsingen tussen individuele tanden en ROI's voor \ttt{01.tif}.}
 \label{fig:teeth_iso}
+\vspace{-2cm}
 \end{wrapfigure}
 
 We merkten eerder op dat \cite{jain2004matching} er voor gekozen heeft om de variabele hoek van -20\degree tot +20\degree uit \cite{abdel2003challenges} te laten vallen. We zijn van mening dat deze vereenvoudiging, alhoewel deels opgevangen door de introductie van de spline functie, toch iets te ruwe resultaten oplevert en niet veel speling laat, waardoor veel fouten ontstaan. Spijtig genoeg liet de beschikbare tijd ons niet meer toe om deze variatie te implementeren en te valideren.
@@ -396,18 +397,65 @@ Appendix \ref{appendix:teeth-isolation} toont hoe de individuele tanden gesegmen
 
 \subsection{Contour bepaling}
 
-TODO
+Aan de hand van de ROI's kan nu een rechthoekig gedeelte uit het originele beeld weerhouden worden. Hier binnen bevindt zich \'e\'en tand die horizontaal en verticaal evenwijdig met de rechthoek geori\"enteerd is. In \cite{chen2004tooth} wordt gezocht naar een scheiding tussen kroon en wortel op basis van het scheiding tussen achtergrond en tandvlees. \cite{jain2004matching} kiest hier echter een arbitraire verdeling van 1/3 voor de kroon en 2/3 voor de wortel. Dat het detecteren van de contouren soms faalde, lijkt niet te wijten aan deze vereenvoudiging en er dus geen aanwijzing dat het implementeren van een detectie van de scheiding tussen achtergrond en tandvlees hier een verbetering zou opleveren.
+
+Het bepalen van de contour gebeurt in twee stappen: eerst wordt de kroon afgelijnd, waarna de wortel verder naar beneden wordt gevolgd langs twee kanten. De keuze om hier twee verschillende algoritmen te hanteren is wel degelijk onderbouwd en van toepassing. De contour van een kroon wordt typisch omgeven door achtergrond of donkere zones en kent een verloop van een halve cirkel. In het geval van de wortel daarentegen, is het onderscheid niet zo duidelijk door de scheiding tussen tand en bot. Tevens kent de wortel een vrij recht verloop naar beneden toe. Twee verschillende aanpakken kunnen hier gekozen worden.
 
 \subsubsection{Kroon}
 
-TODO
-- gaussian combinatie
-- 
+Van de kroon-regio wordt opnieuw een histogram bepaald. Dit zal typisch twee \emph{opwaartse glooiingen} kennen: \'e\'en voor de donkere zone en \'e\'en voor de lichtere zone. Op basis van dit histogram kunnen we trachten twee Gauss curves te bepalen die samen het histogram benaderen. Deze twee curves vertegenwoordigen dan de kans dat een bepaalde intensiteit tot de achtergrond of tot de tand behoort.
+
+Aangezien er slechts twee mogelijkheden met bijhorende Gauss curve zijn, is de kans dat een intensiteit tot de andere mogelijkheid behoort complementair. Het bepalen van een passende Gauss curve voor de eerste piek in het histogram levert ons voldoende informatie op om de kans te bepalen dat een bepaalde intensiteit tot de achtergrond of de tand behoort. We hanteren hier dus een Gauss- of normaalverdeling
+
+Een normaalverdeling voldoet aan vergelijking \ref{eq:normal}.
+
+\begin{equation} \label{eq:normal}
+\frac{1}{\sqrt{2 \pi \sigma^2}} e^{-\frac{(x-\mu)^2}{2 \sigma^2}}
+\end{equation}
+
+Hierin vinden we twee parameters terug: $\mu$ en $\sigma$ die de plaats en de glooiing van de verdeling zullen bepalen. $\mu$ verplaatst het top-punt van de curve en $\sigma$ bepaalt feitelijk de hoogte.
+
+De implementatie gaat uit van een zeer eenvoudig algoritme: zoek de hoogte van de eerste piek in het histogram en bepaal $\mu$ en $\sigma$ zo dat de top van de curve samenvalt met de piek in het histogram. $\mu$ kan eenvoudig afgeleid wordt uit de intensiteit waar de piek zich voordoet. $\sigma$ kan berekend worden uit de hoogte van de piek via vergelijking \ref{eq:sigma} met $y$ de hoogte van de piek.
+
+\begin{equation} \label{eq:sigma}
+\sigma = \frac{1}{\sqrt{2 \pi} y}
+\end{equation}
+
+Figuur \ref{fig:crown_prob} toont het histogram van de rechts-boven snijtand van beeld 7. Hierop zien we de twee opwaartse glooiingen en de berekende eerste Gauss curve die de kansverdeling geeft dat een punt met zulke intensiteit tot de achtergrond behoort.
+
+\begin{wrapfigure}{r}{0.49\textwidth}
+  \centering
+  \vspace{-3mm}
+  \includegraphics[width=.9\linewidth]{../07-3_crown_hist.eps}
+  \caption{Histogram van de intensiteiten van de kroon en benaderende eerste Gauss curve voor rechtsboven snijtand van \ttt{07.tif}}
+  \label{fig:crown_prob}
+  \vspace{-1cm}
+\end{wrapfigure}
+
+We kunnen nu vanuit het centrum van de kroon een lijn een halve cirkel laten beschrijven en op deze lijn op zoek gaan naar het punt dat zich het meest waarschijnlijk op de contour bevindt. We kunnen dit doen door telkens drie opeenvolgende punten op de lijn te beschouwen. De kans dat het middelste punt van de drie punten zich op de contour bevindt ($P$) wordt bepaald door de kans dat het verste punt tot de achtergrond behoort ($P_{outer}$) en door de kans dat het binnenste punt zich in de tand bevindt ($P_{inner}$). $P$ wordt is dan gelijk aan $P_{outer} . P_{inner}$. Zo kunnen we voor alle punten bepalen hoe groot de kans is dat ze zich op de contour bevinden. Het punt op de lijn met de grootste kans wordt deel van de contour gemaakt. Figuur \ref{fig:contour-tracing}.a uit \cite{jain2004matching} illustreert dit principe.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=.8\linewidth]{resources/contour-tracing.pdf}
+  \caption{Detectie van kroon en wortel (overgenomen uit \cite{jain2004matching}).}
+  \label{fig:contour-tracing}
+\end{figure}
 
 \subsubsection{Wortel}
 
-TODO
-- bot/tand ... andere Methode
+\begin{wrapfigure}{r}{0.49\textwidth}
+  \vspace{-1cm}
+  \centering
+  \includegraphics[width=.9\linewidth]{../01_crp_enh_contours.tif}
+  \caption{Gedetecteerde kroon- en wortel-contouren van \ttt{01.tif}}
+  \label{fig:contours-01}
+\end{wrapfigure}
+
+Het eerste en laatste punt uit de contour van de kroon vormen de beginpunten van twee contouren die de wortel afbakenen. Er wordt hier een andere methode gebruikt dan bij de kroon. Aangezien de wortel typisch recht naar beneden beweegt, volgen we nu deze neerwaartse lijn en zoeken in de horizontale nabijheid naar het punt met de meeste kans om op de contour te liggen. Dit wordt nu eenvoudig gedaan door een gemiddelde intensiteit te zoeken links en rechts van een punt net onder het vorige en het contrast verschil te gebruiken als te optimaliseren eigenschap.
+
+Zo bekomen we uiteindelijk drie stukken van de contour en kunnen we deze samenstellen tot \'e\'en gesloten contour.
+
+Het resultaat van deze tweedelige contour bepaling wordt getoond in figuur \ref{fig:contours-01}. Appendix \ref{appendix:contours} geeft een overzicht van alle resultaten.
 
 \subsection{Nabewerking}
 
@@ -545,6 +593,24 @@ TODO
 \caption{Contourss}
 \label{fig:contours}
 \end{figure}
+
+\subsection{Kroon Histogrammen}
+\label{appendix:crown_histograms}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.9\linewidth]{../crown_histograms-0.png}
+\caption{Sets 01 tot 10}
+\label{fig:crown_histograms-0}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.9\linewidth]{../crown_histograms-1.png}
+\caption{Sets 11 tot 20}
+\label{fig:crown_histograms-1}
+\end{figure}
+
 
 \subsection{Zachte contouren}
 
