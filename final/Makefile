@@ -15,7 +15,7 @@ LOWER_LENGTH=300 					# length of lower-jaw teeth
 # !!! DON'T change anything below this point (unless you know what you're doing)
 
 SRC_DIR=src
-SRCS=${SRC_DIR}/${PROJECT}.py
+SRCS=${SRC_DIR}/*.{py,m}
 REPORT_DIR=report
 REPORT=${REPORT_DIR}/report.pdf
 DIST_CONTENT=${SRCS} DIST_REBUILD_CONTENT=${REPORT}
