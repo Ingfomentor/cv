@@ -93,20 +93,19 @@
 - fixed various small things (rename, legends,...) (1h)
 - report: completed implementation enhancement (1h)
 
-25/5 = 
+25/5 = 6h15min
 - report: implementation jaw segmentation (1h)
 - added plot_teeth_isolation_hists.m (15min)
 - report: implementation teeth isolation (1h)
 - added plot_crown_histogram.m (1h)
 - report: implementation contours (1h45min)
----
-total = 87h15
----
+- report: parameters (30min)
+- report: ui (15min)
+- report: results and conclusions (30min)
 
-- report: implementation contours
-- report: results
-- report: conclusion
+26/6 =
+- report: proofreading and fixes ()
 
-- turn point cloud into actual contour, outliers removed ()
-- presentation
-- process TODO
+---
+total = 95h30min
+---

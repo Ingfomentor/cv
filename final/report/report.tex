@@ -315,7 +315,9 @@ In de eerste fase van de strategie, gaan we op zoek naar de individuele snijtand
 
 Tussen de onder- en bovenkaak bevindt zich consequent een zwarte zone. Deze kan gebruikt worden om reeds een eerste ruwe segmentatie te doen, waarbij de bovenste rij en onderste rij tanden van elkaar gescheiden worden. Door de intensiteiten van elke pixel in elke rij van het beeld op te tellen, bekomen we een histogram van de gesommeerde intensiteiten per rij. Dit geeft ons een beeld van hoe licht of hoe donker een rij - in het algemeen - is. Donkere rijen manifesteren zich als dalen in het histogram en zijn een indicatie dat er veel achtergrond-pixels in de rij voorkomen. 
 
-Omdat de splitsing tussen onder- en bovenkaak dikwijls niet op \'e\'en enkele rij in het beeld ligt, is het aangewezen om dit stuksgewijs te doen voor telkens een aantal kolommen. De middelpunten van de bekomen lijnstukken kunnen vervolgens als punten gebruikt worden om een ge\"interpoleerde \ttt{spline} functie op te stellen die de splitsing beter kan beschrijven.
+Het algoritme maakt tevens gebruik van een Gausse waarschijnlijkheidsfunctie om de verwachte ligging van de splitsing mee in rekening te nemen. Door de gesommeerde intensiteiten te vermenigvuldigen met de waarschijnlijkheid dat er op die bepaalde rij een splitsing is, worden gelijkwaardige rijen verder verfijnd. In de implementatie maken we hier gebruik van een parameter die aangeeft waar de splitsing verwacht wordt in de vorm van een percentage t.o.v. de bovenzijde van het beeld.
+
+Omdat de splitsing tussen onder- en bovenkaak dikwijls niet op \'e\'en enkele rij in het beeld ligt, is het aangewezen om dit stuksgewijs te doen voor telkens een aantal kolommen. Initieel wordt de middelste splitsing gezocht. Eens deze gevonden, wordt deze gebruikt als niet verwachte ligging van de splitsing om de splitsingen links en rechts ervan te bepalen, enz. De middelpunten van de bekomen lijnstukken kunnen vervolgens als punten gebruikt worden om een ge\"interpoleerde \ttt{spline} functie op te stellen die de splitsing beter kan beschrijven.
 
 Deze kromme zal reeds een verbetering zijn over een principe dat gewoon per volledige rij werkt. De initi\"le implementatie was gewoon rij-gebaseerd en dit toonde snel aan dat dit in veel gevallen problemen gaf. Zo bleek al snel dat \'e\'en spline functie om de kromming van de tandenrij in zowel onder- als bovenkaak te beschrijven geen goede resultaten opleverde. De onder- en bovenkaak kunnen een sterk verschillende kromming vertonen en de tanden zijn dikwijls ook totaal verschillend ingepland.
 
@@ -348,8 +350,6 @@ Appendix \ref{appendix:jaw-splits} geeft een visueel overzicht van alle gedetect
 
 \subsubsection{Individuele snijtanden}
 
-Om vervolgens de individuele tanden te segmenteren, gaat het algoritme er van uit dat de scheidingen tussen deze tanden zich als een loodlijn op de spline functie manifesteren. Dit lijkt inderdaad een algemene waarheid, maar de voorbeelden tonen ook aan dat dit niet altijd het geval is. Verder moeten we spijtig genoeg vaststellen dat deze veronderstelling heel sterk afhankelijk is van een goed bepaalde spline functie.
-
 \begin{wrapfigure}{r}{0.49\textwidth}
 \centering
 \begin{subfigure}{.49\textwidth}
@@ -364,7 +364,7 @@ Om vervolgens de individuele tanden te segmenteren, gaat het algoritme er van ui
   \hspace{3mm}
   \includegraphics[width=.8\linewidth]{../01_crp_enh_teeth_iso.tif}
   \caption{Resulterende splitsingen}
-  \label{fig:teeth_iso}
+  \label{fig:teeth_iso_splits}
 \end{subfigure}
 \begin{subfigure}{.49\textwidth}
   \centering
@@ -376,12 +376,14 @@ Om vervolgens de individuele tanden te segmenteren, gaat het algoritme er van ui
 \end{subfigure}
 \caption{Bepalen van splitsingen tussen individuele tanden en ROI's voor \ttt{01.tif}.}
 \label{fig:teeth_iso}
-\vspace{-2cm}
+\vspace{-0.5cm}
 \end{wrapfigure}
+
+Om vervolgens de individuele tanden te segmenteren, gaat het algoritme er van uit dat de scheidingen tussen deze tanden zich als een loodlijn op de spline functie manifesteren. Dit lijkt inderdaad een algemene waarheid, maar de voorbeelden tonen ook aan dat dit niet altijd het geval is. Verder moeten we spijtig genoeg vaststellen dat deze veronderstelling heel sterk afhankelijk is van een goed bepaalde spline functie.
 
 We merkten eerder op dat \cite{jain2004matching} er voor gekozen heeft om de variabele hoek van -20\degree tot +20\degree uit \cite{abdel2003challenges} te laten vallen. We zijn van mening dat deze vereenvoudiging, alhoewel deels opgevangen door de introductie van de spline functie, toch iets te ruwe resultaten oplevert en niet veel speling laat, waardoor veel fouten ontstaan. Spijtig genoeg liet de beschikbare tijd ons niet meer toe om deze variatie te implementeren en te valideren.
 
-Langs de spline functie wordt in elk punt een lijnstuk bepaald van een bepaalde lengte, loodrecht op de spline functie in dat punt. Hiervoor kan de eerste afgeleide van de spline functie gebruikt worden om de richtingsco\"effici\"ent te bepalen van de raaklijn in dat punt en vervolgens een loodrechte hierop. De punten die zich op dit lijnstuk bevinden worden vervolgens gebruikt om de som van de intensiteiten op dit lijnstuk te bepalen. Dit levert opnieuw een histogram op langsheen de spline functie. 
+Langs de spline functie wordt in elk punt een lijnstuk bepaald van een bepaalde lengte, loodrecht op de spline functie in dat punt. Hiervoor kan de eerste afgeleide van de spline functie gebruikt worden om de richtingsco\"effici\"ent te bepalen van de raaklijn in dat punt en vervolgens een loodrechte hierop. De punten die zich op dit lijnstuk bevinden worden vervolgens gebruikt om de som van de intensiteiten op dit lijnstuk te bepalen. Dit levert opnieuw een histogram op langs de spline functie. 
 
 Er worden slechts vijf splitsingen gezocht. Deze vijf bakenen de vier snijtanden af. Eerst wordt gezocht naar een dal in het histogram dat zo dicht mogelijk bij het midden ligt. Vervolgens worden de twee volgende dalen, links en rechts van het middelste, gezocht.
 
@@ -421,16 +423,16 @@ De implementatie gaat uit van een zeer eenvoudig algoritme: zoek de hoogte van d
 \sigma = \frac{1}{\sqrt{2 \pi} y}
 \end{equation}
 
-Figuur \ref{fig:crown_prob} toont het histogram van de rechts-boven snijtand van beeld 7. Hierop zien we de twee opwaartse glooiingen en de berekende eerste Gauss curve die de kansverdeling geeft dat een punt met zulke intensiteit tot de achtergrond behoort.
-
-\begin{wrapfigure}{r}{0.49\textwidth}
+\begin{wrapfigure}{r}{0.40\textwidth}
   \centering
   \vspace{-3mm}
-  \includegraphics[width=.9\linewidth]{../07-3_crown_hist.eps}
-  \caption{Histogram van de intensiteiten van de kroon en benaderende eerste Gauss curve voor rechtsboven snijtand van \ttt{07.tif}}
+  \includegraphics[width=\linewidth]{../07-3_crown_hist.eps}
+  \caption{Histogram van de kroon en benaderende eerste Gauss curve voor de rechtsboven snijtand van \ttt{07.tif}}
   \label{fig:crown_prob}
-  \vspace{-1cm}
+  \vspace{-1.5cm}
 \end{wrapfigure}
+
+Figuur \ref{fig:crown_prob} toont het histogram van de rechts-boven snijtand van beeld 7. Hierop zien we de twee opwaartse glooiingen en de berekende eerste Gauss curve die de kansverdeling geeft dat een punt met zulke intensiteit tot de achtergrond behoort.
 
 We kunnen nu vanuit het centrum van de kroon een lijn een halve cirkel laten beschrijven en op deze lijn op zoek gaan naar het punt dat zich het meest waarschijnlijk op de contour bevindt. We kunnen dit doen door telkens drie opeenvolgende punten op de lijn te beschouwen. De kans dat het middelste punt van de drie punten zich op de contour bevindt ($P$) wordt bepaald door de kans dat het verste punt tot de achtergrond behoort ($P_{outer}$) en door de kans dat het binnenste punt zich in de tand bevindt ($P_{inner}$). $P$ wordt is dan gelijk aan $P_{outer} . P_{inner}$. Zo kunnen we voor alle punten bepalen hoe groot de kans is dat ze zich op de contour bevinden. Het punt op de lijn met de grootste kans wordt deel van de contour gemaakt. Figuur \ref{fig:contour-tracing}.a uit \cite{jain2004matching} illustreert dit principe.
 
@@ -443,40 +445,105 @@ We kunnen nu vanuit het centrum van de kroon een lijn een halve cirkel laten bes
 
 \subsubsection{Wortel}
 
-\begin{wrapfigure}{r}{0.49\textwidth}
-  \vspace{-1cm}
-  \centering
-  \includegraphics[width=.9\linewidth]{../01_crp_enh_contours.tif}
-  \caption{Gedetecteerde kroon- en wortel-contouren van \ttt{01.tif}}
-  \label{fig:contours-01}
-\end{wrapfigure}
-
 Het eerste en laatste punt uit de contour van de kroon vormen de beginpunten van twee contouren die de wortel afbakenen. Er wordt hier een andere methode gebruikt dan bij de kroon. Aangezien de wortel typisch recht naar beneden beweegt, volgen we nu deze neerwaartse lijn en zoeken in de horizontale nabijheid naar het punt met de meeste kans om op de contour te liggen. Dit wordt nu eenvoudig gedaan door een gemiddelde intensiteit te zoeken links en rechts van een punt net onder het vorige en het contrast verschil te gebruiken als te optimaliseren eigenschap.
 
-Zo bekomen we uiteindelijk drie stukken van de contour en kunnen we deze samenstellen tot \'e\'en gesloten contour.
-
-Het resultaat van deze tweedelige contour bepaling wordt getoond in figuur \ref{fig:contours-01}. Appendix \ref{appendix:contours} geeft een overzicht van alle resultaten.
+Zo bekomen we uiteindelijk drie stukken van de contour en kunnen we deze samenstellen tot \'e\'en gesloten contour. Het resultaat van deze tweedelige contour bepaling wordt getoond in figuur \ref{fig:contours-01}. Appendix \ref{appendix:contours} geeft een overzicht van alle resultaten.
 
 \subsection{Nabewerking}
 
-TODO
-- mask.py
-- contour -> draw -> dilate -> erode -> blur -> find contours
-- compare\_masks.py
+De bekomen contouren bevatten veel fouten in de vorm van losse contour-pixels die te ver naar binnen of buiten liggen. Ook zijn ze zeer onregelmatig en bevatten daarom veel onnuttige details. Voor we deze contouren kunnen vergelijken met de aangeleverde resultaten, moeten we een nabewerking toepassen om er een redelijk masker van te maken.
+
+\begin{figure}
+\centering
+\begin{subfigure}{.49\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{../01_crp_enh_contours.tif}
+  \caption{Gedetecteerde contouren van \ttt{01.tif}}
+  \label{fig:contours-01}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{../01_crp_enh_masks.tif}
+  \caption{Zachtere contouren van \ttt{01.tif}}
+  \label{fig:masks-01}
+\end{subfigure}
+\caption{Resultaten van de contour-detectie.}
+\label{fig:results-01}
+\end{figure}
+
+Dit gebeurt in de \ttt{mask.py} module. Hier wordt de gedetecteerde contour genomen en door middel van verschillende filterende operaties bewerkt tot een \emph{zachtere} versie die meer geschikt is als \emph{masker}. 
+
+Eerst wordt de contour, zoals hij gedetecteerd is, getekend als een vol wit vlak. Vervolgens wordt hierop een \emph{dilatatie} uitgevoerd, waardoor een ruimere figuur beschreven wordt. Deze wordt opnieuw gereduceerd door uitvoeren van een \emph{erodering}. Tot slot wordt het bekomen beeld verzacht met een \emph{vervagende} filter.
+
+Voor de dilatatie werd een kruisvormige structuur gebruikt van 17 bij 17 pixels; voor de erodering eveneens een kruisvormige structuur maar dan van 13 bij 13. Voor de vervagende filter werd een gewone \emph{blur} functie gebruikt me een kernel van 9 bij 9.
+
+In het bekomen beeld werd opnieuw een contour gezocht. Deze is een zachtere versie van de gedetecteerde contour, zonder dat echt veel details verloren gaan. Figuur \ref{fig:masks-01} toont het resultaat  naast de gedetecteerde contouren.
+
+Een laatste stap die ge\"implementeerd werd is een vergelijking met de aangeleverde resultaten. \ttt{compare\_masks.py} maakt een vergelijkende maskering van de bekomen resultaten en de correcte oplossing. Hierbij worden pixels die overeenkomen in beide maskers groen weergegeven, pixels die verkeerd zijn in het rood en pixels die niet gevonden werden in het blauw. Figuur \ref{fig:comparison-01} toont deze resultaten voor de eerste beeldset. 
+
+Uit deze figuur blijkt dat de resultaten vrij positief zijn. De bovenste snijtanden vertonen een hoofdzakelijk grote kleur, maar veel mogelijk typerende aspecten zijn verloren gegaan. Bij de onderste tanden merken we op dat in het algemeen de wortels niet diep genoeg gedetecteerd zijn. In het geval van de linkse onderste snijtand zien we dat doordat de rechtse wortel-contour nagenoeg niet gedetecteerd werd, dat door de manier waarop de contouren gecombineerd worden, er een groot stuk verloren kan gaan in combinatie met de detectie van een verkeerde andere zone.
+
+Appendix \ref{appendix:comparison} toont alle vergelijkende maskers voor de eerste twintig beelden. Hieruit blijft al snel dat de resultaten zeer variabel zijn.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\linewidth]{resources/comparison-01.png}
+  \caption{Vergelijking van gedetecteerde maskers met aangeleverde resultaten voor \ttt{01.tif}.}
+  \label{fig:comparison-01}
+\end{figure}
+
+\subsection{Parameters}
+
+Tijdens de implementatie werden verschillende \emph{globale} parameters naar buiten gebracht\footnote{De Makefile bevat deze parameters en zorgt er voor dat ze op de juiste manier aangeboden worden aan de verschillende scripts.}. Een overzicht:
+
+\begin{description}
+\item[crop width]  geeft de breedte aan van het centraal uit te knippen deel van het originele beeld.\\ Waarde: 700 pixels.
+\item[crop height] geeft de hoogte aan van het centraal uit te knippen deel van het originele beeld.\\ Waarde: 1100 pixels.
+\item[crop top offset] is het dat van de bovenzijde van het uitgeknipte deel extra verwijderd wordt. \\ Waarde: 250 pixels.
+\item[alpha] is de manueel vastgestelde waarde voor de $\alpha$ parameter bij contrast-stretching. \\ Waarde: 20.
+\item[slices] is het aantal splitsingen dat gezocht wordt. Dit is \'e\'en meer dan het aantal tanden. \\ Waarde: 5.
+\item[expected jaw split] is de verwachte hoogte van de splitsing tussen de kaken. \\ Waarde: 70\%.
+\item[sigma] bepaalt hoe de Gausse waarschijnlijkheidsfunctie voor het bepalen van de splitsing tussen onder- en bovenkaak, rekening houdt met de verwachte locatie.\\ Waarde: 0.4.
+\item[inversion top] bepaalt de hoogte van de waarschijnlijkheidsfunctie t.o.v. welke ze afgetrokken wordt om een sterk verkleinende waarden te bekomen in de verwachte zone. \\ Waarde: 1.1.
+\item[upper length] is de verwachte lengte in pixels van de bovenste tanden.\\ Waarde: 350 pixels.
+\item[lower length] is de verwachte length in pixels van de onderste tanden. \\ Waarde" 300 pixels.
+\end{description}
+
+Elk van deze parameters is typisch onderhevig aan de doelstellingen en mogelijkheden. Ze kunnen op basis van een \emph{vluchtige} blik op alle beelden bepaald worden zonder specifiek enige beeld te bevoordelen. De belangrijkste uitzonderingen op deze regel zijn \emph{alpha}, \emph{sigma} en \emph{inversion top}. De laatste twee zijn vrij technische parameters die geen uitgesproken invloed hebben op de resultaten. De parameter voor de \emph{contrast stretching} daarentegen wel.
 
 \subsection{ui.py}
 
-TODO
+\begin{wrapfigure}{r}{0.49\textwidth}
+  \vspace{-1cm}
+  \centering
+  \includegraphics[width=\linewidth]{resources/ui.png}
+  \caption{Gebruikers-interface voor het experimenteren met parameters.}
+  \label{fig:ui}
+  \vspace{-1cm}
+\end{wrapfigure}
 
-\section{Resultaten}
 
-TODO
+Dit laatste aspect werd duidelijk toen een bijkomende implementatie van de verschillende modules werd gerealiseerd in de vorm van een overkoepelende gebruikers-interface (\ttt{ui.py}). Deze interface laat toe om alle parameters te wijzigen en de resultaten worden onmiddellijk weergegeven op een geselecteerd beeld. Dit laat toe om stapsgewijs te experimenteren met de verschillende parameters. Figuur \ref{fig:ui} toont de interface.
 
-\section{Conclusies}
+Zo werd op het einde van de implementatie de oorspronkelijk bepaalde waarde voor \emph{alpha}, verder bijgesteld waardoor er sterk verbeterende eind resultaten konden opgetekend worden voor een selectie van de beelden.
 
-TODO
+\section{Resultaten en conclusies}
 
-- optimalisatie van beeldkwaliteit is belangrijk
+Appendix \ref{appendix:comparison} toont de effectieve resultaten. Buiten enkele uitzonderlijke beelden, is het resultaat overwegend tegenvallend. Zoals vermeld in \cite{} blijft deze aanpak inderdaad niet voordelig in een volledig geautomatiseerde opstelling. Het aantal parameters en de gevoeligheid van deze parameters toont aan dat het inderdaad eerder een sterk gesuperviseerde methode is.
+
+In bijna elke fase werd uitgegaan van een door een externe bron aangeleverde basis aan informatie: bv. voor de splitsing tussen de onder- en bovenkaak; ook bij het splitsen van de individuele tanden zou een helpende hand veel problemen kunnen vermijden, enz.
+
+Het gebruik van de interface om de waarde van \emph{alpha} te verfijnen, toonde \'e\'en van de belangrijkste conclusies aan uit dit project: de kwaliteit van het beeldmateriaal is van zeer groot belang voor deze algoritmes. Indien de contrasten niet op een zorgvuldige manier gecorrigeerd worden, zullen dit soort van doelgerichte algoritmes zeer makkelijke falen.
+
+Doorheen de overzichten is een duidelijke trend te merken: die beelden die op het einde een redelijk resultaat laten optekenen t.o.v. de aangeleverde voorbeelden, vertonen deze kwaliteit in elke fase van het algoritme. De doelgerichtheid van de verschillende stappen brengt een groeiend positief of negatief resultaat met zich mee.
+
+\'E\'en van de persoonlijke doelstellingen van dit project was om deze redelijk verschillende methode - t.o.v. deze gezien tijdens de cursus - te evalueren. Zonder bijkomende implementaties is het niet met zekerheid vast te stellen, maar vermoedelijk zullen andere methoden op basis van algemene filters, gradi\"enten en \emph{rand detectoren} meer betrouwbare resultaten kunnen opleveren.
+
+\subsection*{Werklast}
+
+De literatuurstudie, implementatie en het schrijven van het verslag namen samen ongeveer 95 uren in beslag. Een groot deel hiervan was toe te wijzen aan het verkennen van de mogelijkheden van Python, NumPy, SciPy en OpenCV. \'E\'en van de belangrijkste oorzaken van tijdverlies was type-problemen. Dikwijls moesten Numpy lijsten van type veranderd worden voor ze correct konden verwerkt worden. Dit leidde soms tot zoektochten naar alternatieven, om uiteindelijk soms op een minuscule type-verandering uit te komen als zeer eenvoudige oplossing.
+
+Ook de grote overlappen in mogelijkheden tussen de verschillende bibliotheken zorgde voor keuzes waarvan de gevolgen soms niet in te schatten waren, met herwerkingen tot gevolg.
 
 
 \bibliographystyle{alpha}
@@ -622,6 +689,7 @@ TODO
 \end{figure}
 
 \subsection{Vergelijking met verwachte resultaat}
+\label{appendix:comparison}
 
 \begin{figure}[H]
 \centering
