@@ -89,9 +89,14 @@
 - implemented masking (4h30min)
 - implemented mask comparing (2h)
 
-23/5 =
+23/5 = 2h
 - fixed various small things (rename, legends,...) (1h)
 - report: completed implementation enhancement (1h)
+
+25/5 = 
+- report: implementation jaw segmentation (1h)
+- added plot_teeth_isolation_hists.m (15min)
+- report: implementation teeth isolation (1h)
 ---
 total = 87h15
 ---

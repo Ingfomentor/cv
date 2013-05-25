@@ -23,6 +23,8 @@
 \usepackage{rotating}
 \usepackage{float}
 
+\usepackage{gensymb}
+
 \usepackage{xypic}
 \usepackage[all,color]{xy}
 \xyoption{all}
@@ -87,7 +89,7 @@ Door het toepassen van een adaptieve drempelwaarde, wordt vervolgens een binaire
 
 Dit binaire beeld vorm vervolgens de basis voor het segmenteren van de individuele tanden. Hier wordt eerst gezocht naar een horizontale splitsing tussen onder- en bovenkaak. Hierbij wordt een minimale som van horizontale intensiteiten gezocht. Aangezien achtergrondgebieden zwart zijn, zal een overwegend zwarte scheidingslijn een zeer lage gesommeerde intensiteit kennen en duiden op een splitsing. Omdat deze horizontale lijn niet altijd mooi horizontaal zal zijn, wordt een rotatie van deze lijn tussen -20 en +20 graden in rekening genomen. Aangezien dit niet altijd mogelijk is, wordt voorgesteld om dit te doen voor verticale deelgebieden.
 
-Vertrekkende van deze horizontale splitsing worden de tanden ge\"isoleerd. Hierbij wordt een gelijkaardige methode toegepast en wordt vanaf de horizontale splitsing gezocht naar rechten die loodrecht staan op de splitsing, met opnieuw in acht name van een hook tussen -20 en +20 graden, waarbij de som van de intensiteiten opnieuw minimaal is.
+Vertrekkende van deze horizontale splitsing worden de tanden ge\"isoleerd. Hierbij wordt een gelijkaardige methode toegepast en wordt vanaf de horizontale splitsing gezocht naar rechten die loodrecht staan op de splitsing, met opnieuw in acht name van een hoek tussen -20 en +20 graden, waarbij de som van de intensiteiten opnieuw minimaal is.
 
 Het vervolg van dit artikel focust hoofdzakelijk nog op het opslaan en het terugvinden door vergelijken van de informatie over de individuele tanden.
 
@@ -271,6 +273,8 @@ Op deze figuur kunnen we heel goed zien hoe de $\beta$ parameter de ligging van 
 
 Voor de $\alpha$ waarde wordt gezocht naar de breedte van het interval dat het zwaartepunt uitmaakt van het histogram. In praktijk bleek dit niet zo eenvoudig te bepalen en werd na enkele experimenten geopteerd om voor deze implementatie een vaste waarde te kiezen. Deze werd vastgesteld op $20$.
 
+Appendix \ref{appendix:sigmoids} bevat een overzicht van alle sigmoids.
+
 \subsubsection{Resultaat van de voorbereidende verbeteringen}
 
 Figuur \ref{fig:preparation} geeft een visueel overzicht van de evolutie van origineel beeld tot bijgesneden beeld met verbeterd contrast.
@@ -305,9 +309,114 @@ We zien in dit voorbeeld onmiddellijk dat er zich een probleem kan en zal voordo
 
 \subsection{Segmentatie}
 
-TODO
+In de eerste fase van de strategie, gaan we op zoek naar de individuele snijtanden, de zgn. ROI. Eerst wordt de onderkaak van de bovenkaak gescheiden, waarna de twee rijen tanden nog verder opgesplitst worden. Het principe dat hiervoor toegepast wordt is tweemaal hetzelfde: op basis van sommaties van intensiteiten langsheen een bepaalde richting, wordt gezocht naar pieken of dalen in het histogram. Deze geven aan waar zich lichte of donkere zones bevinden. Zowel tussen de onder- en bovenkaar als tussen de individuele tanden bevinden zich zulke zones. Op basis van deze zones kan vervolgens een rechthoekig ROI rond de tanden bepaald worden.
+
+\subsubsection{Onder- en bovenkaak}
+
+Tussen de onder- en bovenkaak bevindt zich consequent een zwarte zone. Deze kan gebruikt worden om reeds een eerste ruwe segmentatie te doen, waarbij de bovenste rij en onderste rij tanden van elkaar gescheiden worden. Door de intensiteiten van elke pixel in elke rij van het beeld op te tellen, bekomen we een histogram van de gesommeerde intensiteiten per rij. Dit geeft ons een beeld van hoe licht of hoe donker een rij - in het algemeen - is. Donkere rijen manifesteren zich als dalen in het histogram en zijn een indicatie dat er veel achtergrond-pixels in de rij voorkomen. 
+
+Omdat de splitsing tussen onder- en bovenkaak dikwijls niet op \'e\'en enkele rij in het beeld ligt, is het aangewezen om dit stuksgewijs te doen voor telkens een aantal kolommen. De middelpunten van de bekomen lijnstukken kunnen vervolgens als punten gebruikt worden om een ge\"interpoleerde \ttt{spline} functie op te stellen die de splitsing beter kan beschrijven.
+
+Deze kromme zal reeds een verbetering zijn over een principe dat gewoon per volledige rij werkt. De initi\"le implementatie was gewoon rij-gebaseerd en dit toonde snel aan dat dit in veel gevallen problemen gaf. Zo bleek al snel dat \'e\'en spline functie om de kromming van de tandenrij in zowel onder- als bovenkaak te beschrijven geen goede resultaten opleverde. De onder- en bovenkaak kunnen een sterk verschillende kromming vertonen en de tanden zijn dikwijls ook totaal verschillend ingepland.
+
+We hebben daarom  een verbetering aangebracht aan het algoritme, waarbij we niet alleen kijken naar \emph{het} dal, maar ook naar de breedte ervan. In plaats van alleen het diepste punt te kiezen, vertrekken we van dit punt in voor- en achterwaartse richting en zoeken naar de grenzen van het plateau waarin het diepste punt zich bevindt.
+
+Figuur \ref{fig:jaw_split_histograms} toont de histogrammen voor vijf stukken van beeld \ttt{03.tif}. Figuur \ref{fig:jaw_split} toont de overeenkomstige splitsingen en de ge\"interpoleerde spline functies. De histogrammen werden 90\degree gedraaid, zodat de overeenkomsten duidelijk zichtbaar zijn.
+
+\begin{figure}
+\centering
+\begin{subfigure}{.49\textwidth}
+  \centering
+  \includegraphics[height=.9\linewidth, angle=-90]{../03_crp_enh_jaw_split_histograms.eps}
+  \caption{Histogrammen voor vijf stukken}
+  \label{fig:jaw_split_histograms}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+  \centering
+  \vspace{7mm}
+  \includegraphics[width=.9\linewidth]{../03_crp_enh_jaw_split.tif}
+  \caption{Resulterende splitsingen}
+  \label{fig:jaw_split}
+\end{subfigure}
+\caption{Bepalen van de splitsing tussen onder- en bovenkaak voor \ttt{03.tif}.}
+\label{fig:jaw_split}
+\end{figure}
+
+Op de histogrammen zien we de aanduiding van de grenzen van het plateau waarin het diepste punt zich bevindt. Door naar links en rechts te zoeken in het histogram, zoeken we als het ware de randen van de donkere zone tussen onder- en bovenkaak. De resulterende lijnstukken en ge\"interpoleerde spline functie illustreren vervolgens het verschil tussen de kromming van de onder en bovenkaak. In dit geval vertoont de onderkaak een zeer vlak verloop, terwijl de bovenkaak twee duidelijke glooiingen vertoont.
+
+Appendix \ref{appendix:jaw-splits} geeft een visueel overzicht van alle gedetecteerde splitsingen tussen onder- en bovenkaak.
+
+\subsubsection{Individuele snijtanden}
+
+Om vervolgens de individuele tanden te segmenteren, gaat het algoritme er van uit dat de scheidingen tussen deze tanden zich als een loodlijn op de spline functie manifesteren. Dit lijkt inderdaad een algemene waarheid, maar de voorbeelden tonen ook aan dat dit niet altijd het geval is. Verder moeten we spijtig genoeg vaststellen dat deze veronderstelling heel sterk afhankelijk is van een goed bepaalde spline functie.
+
+\begin{wrapfigure}{r}{0.49\textwidth}
+\centering
+\begin{subfigure}{.49\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{../01_crp_enh_teeth_iso_histograms.eps}
+  \caption{Histogrammen}
+  \label{fig:teeth_iso_histograms}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+  \centering
+  \vspace{3mm}
+  \hspace{3mm}
+  \includegraphics[width=.8\linewidth]{../01_crp_enh_teeth_iso.tif}
+  \caption{Resulterende splitsingen}
+  \label{fig:teeth_iso}
+\end{subfigure}
+\begin{subfigure}{.49\textwidth}
+  \centering
+  \vspace{3mm}
+  \hspace{3mm}
+  \includegraphics[width=.8\linewidth]{../01_crp_enh_roi.tif}
+  \caption{Resulterende ROI's}
+  \label{fig:teeth_iso_roi}
+\end{subfigure}
+\caption{Bepalen van splitsingen tussen individuele tanden en ROI's voor \ttt{01.tif}.}
+\label{fig:teeth_iso}
+\end{wrapfigure}
+
+We merkten eerder op dat \cite{jain2004matching} er voor gekozen heeft om de variabele hoek van -20\degree tot +20\degree uit \cite{abdel2003challenges} te laten vallen. We zijn van mening dat deze vereenvoudiging, alhoewel deels opgevangen door de introductie van de spline functie, toch iets te ruwe resultaten oplevert en niet veel speling laat, waardoor veel fouten ontstaan. Spijtig genoeg liet de beschikbare tijd ons niet meer toe om deze variatie te implementeren en te valideren.
+
+Langs de spline functie wordt in elk punt een lijnstuk bepaald van een bepaalde lengte, loodrecht op de spline functie in dat punt. Hiervoor kan de eerste afgeleide van de spline functie gebruikt worden om de richtingsco\"effici\"ent te bepalen van de raaklijn in dat punt en vervolgens een loodrechte hierop. De punten die zich op dit lijnstuk bevinden worden vervolgens gebruikt om de som van de intensiteiten op dit lijnstuk te bepalen. Dit levert opnieuw een histogram op langsheen de spline functie. 
+
+Er worden slechts vijf splitsingen gezocht. Deze vijf bakenen de vier snijtanden af. Eerst wordt gezocht naar een dal in het histogram dat zo dicht mogelijk bij het midden ligt. Vervolgens worden de twee volgende dalen, links en rechts van het middelste, gezocht.
+
+Figuur \ref{fig:teeth_iso_histograms} toont de detectie van splitsingen tussen tanden voor beeld \ttt{01.tif} op basis van de vijf middelste dalen in het histogram. Figuur \ref{fig:teeth_iso_splits} toont de resulterende splitsingen.
+
+Na het bepalen van de splitsingen tussen de vier snijtanden, worden deze splitsende lijnstukken nog omgezet in een rechthoekige ROI. De implementatie hiervan is eenvoudig: neem twee lijnstukken en bepaal de hoek van een rechte door de onderste hoekpunten met de horizontale X-as. Roteer de vier punten over deze hoek. De onderste punten liggen nu op de X-as. Verschuif de punten nu horizontaal naar links of rechts om een rechthoek te bekomen. Roteer ten slotte de punten opnieuw tot de originele positie t.o.v de X-as.
+
+De rechthoeken die op deze manier bepaald worden zijn de ROI's of \emph{Regions Of Interest}. Als de splitsingen goed verlopen zijn, zou elke ROI een volledige tand moeten bevatten. Deze ROI's zullen ons toelaten om elke tand op zich binnen een rechthoekig kader te benaderen om de effectieve contouren te bepalen.
+
+Figuur \ref{fig:teeth_iso_roi} toont hoe de ROI's zich verhouden tot de individuele tanden en de splitsingen ertussen.
+
+Appendix \ref{appendix:teeth-isolation} toont hoe de individuele tanden gesegmenteerd zijn op basis van de gedetecteerde scheidingen tussen de tanden. Appendix \ref{appendix:rois} voegt hier nog de uitwerking van de ROI's aan toe.
 
 \subsection{Contour bepaling}
+
+TODO
+
+\subsubsection{Kroon}
+
+TODO
+- gaussian combinatie
+- 
+
+\subsubsection{Wortel}
+
+TODO
+- bot/tand ... andere Methode
+
+\subsection{Nabewerking}
+
+TODO
+- mask.py
+- contour -> draw -> dilate -> erode -> blur -> find contours
+- compare\_masks.py
+
+\subsection{ui.py}
 
 TODO
 
@@ -319,6 +428,9 @@ TODO
 
 TODO
 
+- optimalisatie van beeldkwaliteit is belangrijk
+
+
 \bibliographystyle{alpha}
 \bibliography{references}
 
@@ -326,49 +438,138 @@ TODO
 
 \appendix
 
-\section{Voorbereide originele beelden}
+\section{Voorbereidende stappen}
+
+\subsection{Voorbereide originele beelden}
 \label{appendix:prepared-originals}
 
 \begin{figure}[H]
-\includegraphics[width=\linewidth]{../enhanced.png}
+\centering
+\includegraphics[width=.9\linewidth]{../enhanced.png}
 \caption{Voorbereide originele beelden.}
 \label{fig:prepared-originals}
 \end{figure}
 
-\section{Boven- en onder kaak-splitsing}
-\label{appendix:jaw-split}
+\subsection{Originele histogrammen}
+\label{appendix:cropped-histograms}
 
 \begin{figure}[H]
-\includegraphics[width=\linewidth]{../jaw_splits.png}
+\centering
+\includegraphics[width=\linewidth]{../cropped_hists.png}
+\caption{Originele histogrammen}
+\label{fig:cropped-histograms}
+\end{figure}
+
+\subsection{Sigmoids}
+\label{appendix:sigmoids}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{../sigmoids.png}
+\caption{Sigmoids}
+\label{fig:sigmoids}
+\end{figure}
+
+\subsection{Histogrammen na contrast stretching}
+\label{appendix:enhanced-histograms}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{../enhanced_hists.png}
+\caption{Histogrammen na contrast stretching}
+\label{fig:enhanced-histograms}
+\end{figure}
+
+\section{Boven- en onder kaak-splitsing}
+\label{appendix:jaw-splits}
+
+\subsection{Splitsingen}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.9\linewidth]{../jaw_splits.png}
 \caption{Splitsing van onder- en bovenkaak.}
 \label{fig:jaw-splits}
 \end{figure}
 
+\subsection{Histogrammen}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{../jaw_splits_hists.png}
+\caption{Histogrammen van onder- en bovenkaak.}
+\label{fig:jaw-splits-hists}
+\end{figure}
+
+
 \section{Individuele snijtand segmentatie}
 \label{appendix:teeth-segmentation}
 
+\subsection{Splitsingen}
+\label{appendix:teeth-isolation}
+
 \begin{figure}[H]
-\includegraphics[width=\linewidth]{../teeth_iso.png}
+\centering
+\includegraphics[width=.9\linewidth]{../teeth_iso.png}
 \caption{Splitsing van individuele snijtanden.}
 \label{fig:teeth-isolation}
 \end{figure}
 
-\section{ROI's}
+\subsection{Histogrammen}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{../teeth_iso_hists.png}
+\caption{Histogrammen en aanduiding van individuele snijtanden.}
+\label{fig:teeth-isolation-hists}
+\end{figure}
+
+\subsection{ROI's}
 \label{appendix:rois}
 
 \begin{figure}[H]
-\includegraphics[width=\linewidth]{../roi.png}
+\centering
+\includegraphics[width=.9\linewidth]{../roi.png}
 \caption{ROI's}
 \label{fig:rois}
 \end{figure}
 
-\section{Resulterende contouren}
+\section{Resulterende contouren en maskers}
 \label{appendix:contours}
 
+\subsection{Gedetecteerde contouren}
+
 \begin{figure}[H]
-\includegraphics[width=\linewidth]{../contours.png}
+\centering
+\includegraphics[width=.9\linewidth]{../contours.png}
 \caption{Contourss}
 \label{fig:contours}
 \end{figure}
+
+\subsection{Zachte contouren}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.9\linewidth]{../masks.png}
+\caption{Maskers}
+\label{fig:masks}
+\end{figure}
+
+\subsection{Vergelijking met verwachte resultaat}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.9\linewidth]{../comparison-0.png}
+\caption{Vergelijking sets 01 tot 10}
+\label{fig:comparison-0}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=.9\linewidth]{../comparison-1.png}
+\caption{Vergelijking sets 11 tot 20}
+\label{fig:comparison-1}
+\end{figure}
+
 
 \end{document}
