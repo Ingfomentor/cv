@@ -15,10 +15,10 @@ LOWER_LENGTH=300 					# length of lower-jaw teeth
 # !!! DON'T change anything below this point (unless you know what you're doing)
 
 SRC_DIR=src
-SRCS=${SRC_DIR}/*.{py,m}
+SRCS=${SRC_DIR}
 REPORT_DIR=report
 REPORT=${REPORT_DIR}/report.pdf
-DIST_CONTENT=${SRCS} DIST_REBUILD_CONTENT=${REPORT}
+DIST_CONTENT=Makefile README ${SRCS}
 
 PYTHON=/opt/local/bin/python -Wi
 DIST_DIR=dist
@@ -33,13 +33,13 @@ MONTAGE=montage -label "%f" -geometry "140x170>+4+3" -tile 5x
 MONTAGE_GRAPH=montage -label "%f" -geometry "200x150>+4+3" -tile 5x
 CONVERT=convert
 
-SRC_DIR=images
-IMAGES=$(notdir $(wildcard ${SRC_DIR}/*.tif))
-SEGMENTS=$(notdir $(wildcard ${SRC_DIR}/segmented/*.png))
+IMG_DIR=images
+IMAGES=$(notdir $(wildcard ${IMG_DIR}/*.tif))
+SEGMENTS=$(notdir $(wildcard ${IMG_DIR}/segmented/*.png))
 
 LC_CTYPE="C"
 
-VPATH = ${SRC_DIR}
+VPATH = ${IMG_DIR}
 
 
 all: overviews
@@ -177,7 +177,7 @@ crown_histograms-0.png crown_histograms-1.png: crown_histograms.png
 # UGLY AS HELL - but it allows for prerequisites ;-)
 
 define SEGMENT
-%-$(1).png: ${SRC_DIR}/segmented/%-$(1).png %_crp_enh_masks.mat %_crp_enh_roi.mat
+%-$(1).png: ${IMG_DIR}/segmented/%-$(1).png %_crp_enh_masks.mat %_crp_enh_roi.mat
 	@echo "--- creating comparing mask for $$@"
 	@${PYTHON} src/compare_mask.py $$^ $$@ $(1) ${CROP_WIDTH} ${CROP_HEIGHT} ${CROP_TOP_OFFSET}
 endef
@@ -205,9 +205,9 @@ ${REPORT}:
 		touch report.tex; \
 		${LATEX2PDF} report.tex)
 
-dist: 
+dist:
 	@mkdir ${DIST_DIR}
-	@cp ${DIST_CONTENT} ${DIST_DIR}
+	@cp -r ${DIST_CONTENT} ${DIST_DIR}
 	@(cd ${DIST_DIR}/; ${ZIP} -r ../christophe_van_ginneken.zip *)
 	@rm -rf ${DIST_DIR}
 
@@ -217,7 +217,9 @@ clean:
 
 mrproper: clean
 	@${RM} *.mat
+	@${RM} ${SRC_DIR}/*.pyc
 	@${RM} verslag/verslag.pdf
+	@${RM} dist
 
 .PRECIOUS: %_hist.mat %_hist.eps %_enh.mat %_jaw_split.mat %_teeth_iso.mat %_roi.mat %_contours.mat %_masks.mat
 .SECONDARY: %_hist.mat %_hist.eps %_enh.mat %_jaw_split.mat %_teeth_iso.mat %_roi.mat %_contours.mat %_masks.mat
