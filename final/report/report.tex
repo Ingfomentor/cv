@@ -174,13 +174,13 @@ De hele structuur is visueel weergegeven in figuur \ref{fig:setup}: van boven na
 	\parbox{5.75cm}{\centering crop\_image.py} 
 		\ar[d]_{\tt 01\_crp.tif} \\
 	\parbox{5.75cm}{\centering create\_histogram.py} 
-		\ar[d]_{\tt 01\_crp.tif}^{\tt 01\_crp\_histogram.mat}
-		\ar[rr]^{\tt 01\_crp\_histogram.mat} &*{\hspace{2.5cm}} & \parbox{4cm}{\centering plot\_hist.m} \\
+		\ar[d]_{\tt 01\_crp.tif}^{\tt 01\_crp\_hist.mat}
+		\ar[rr]^{\tt 01\_crp\_hist.mat} &*{\hspace{2.5cm}} & \parbox{4cm}{\centering plot\_histogram.m} \\
 	\parbox{5.75cm}{\centering determine\_enhancement\_parameters.py} 
 		\ar[d]^{\tt 01\_crp\_enh.mat} 
 		\ar[rr]^{\tt 01\_crp\_enh.mat} &*{\hspace{2.5cm}} & \parbox{4cm}{\centering plot\_sigmoid.m} \\
 	\parbox{5.75cm}{\centering create\_enhanced\_image.py}
-		\ar[d]	_{\tt 01\_crp\_enh.tif}	 &*{\hspace{2.5cm}} & \parbox{4cm}{\centering plot\_jaw\_hists.m} \\
+		\ar[d]	_{\tt 01\_crp\_enh.tif}	 &*{\hspace{2.5cm}} & \parbox{4cm}{\centering plot\_jaw\_histograms.m} \\
 	*+++[F=]{\parbox{5.75cm}{\centering jaw\_split.py}}
 		\ar[d]_{\tt 01\_crp\_enh.tif}^{\tt 01\_crp\_enh\_jaw\_split.mat}
 		\ar[rru]^{\tt 01\_crp\_enh\_jaw\_split.mat}
@@ -228,7 +228,7 @@ We kunnen nu reeds opmerken dat een aantal van de originele beelden problematisc
 
 Radiografie-beelden zijn gekenmerkt door een veelheid aan grijstinten en wazige overgangen. Omdat we op basis van histogrammen van intensiteiten splitsingen willen gaan bepalen, is het belangrijk dat er een duidelijk onderscheid is tussen donkere en lichte zones. Om deze reden is het belangrijk om te zorgen voor een accentuering van het contrast, waarbij donkere zones expliciet donkerder gemaakt worden en lichtere zones lichter. Een techniek die dit doet is het zogenaamde \emph{contrast stretching}.
 
-Zoals de naam doet vermoeden trachten we bij \emph{contrast stretching} het contrast dat er is, zo uit te rekken, dat het nadrukkelijker aanwezig is. Om dit te doen, werken we met een histogram van de intensiteiten van de grijs-waarden en defini\"eren we een transformatie van deze intensiteiten. Figuur \ref{fig:contrast-stretching-histograms} toont een histogram v\'o\'or en na \emph{contrast stretching}. Het is duidelijk dat de intensiteiten nu als het ware uitgerokken zijn over het volledige spectrum en dat de stretching vooral in de middelste zone gebeurd is. Merk op dat door het uitrekken er ook gaten ontstaan.
+Zoals de naam doet vermoeden trachten we bij \emph{contrast stretching} het contrast dat er is, zo uit te rekken, dat het nadrukkelijker aanwezig is. Om dit te doen, werken we met een histogram van de intensiteiten van de grijs-waarden en defini\"eren we een transformatie van deze intensiteiten. Figuur \ref{fig:contrast-stretching} toont een histogram v\'o\'or en na \emph{contrast stretching}. Het is duidelijk dat de intensiteiten nu als het ware uitgerokken zijn over het volledige spectrum en dat de stretching vooral in de middelste zone gebeurd is. Merk op dat door het uitrekken er ook gaten ontstaan.
 
 \begin{figure}
 \centering
@@ -244,8 +244,8 @@ Zoals de naam doet vermoeden trachten we bij \emph{contrast stretching} het cont
   \caption{Na verbetering}
   \label{fig:enhanced-histogram}
 \end{subfigure}
-\label{fig:contrast-stretching-histograms}
 \caption{Histogrammen voor en na contrast stretching van \ttt{01\_crp.tif}}
+\label{fig:contrast-stretching}
 \end{figure}
 
 Als transformerende functie werd een \emph{sigmoid} functie gebruikt. Vergelijking \ref{eq:sigmoid-standard} toont de algemene vorm.
@@ -481,7 +481,7 @@ Een laatste stap die ge\"implementeerd werd is een vergelijking met de aangeleve
 
 Uit deze figuur blijkt dat de resultaten vrij positief zijn. De bovenste snijtanden vertonen een hoofdzakelijk groene kleur, maar mogelijk zijn veel typerende details verloren gegaan. Bij de onderste tanden merken we op dat in het algemeen de wortels niet diep genoeg gedetecteerd zijn. In het geval van de linkse onderste snijtand zien we, doordat de rechtse wortel-contour nagenoeg niet gedetecteerd werd, dat door de manier waarop de contouren gecombineerd worden, er een groot stuk verloren kan gaan in combinatie met de detectie van een verkeerde andere zone.
 
-Appendix \ref{appendix:comparison} toont alle vergelijkende maskers voor de eerste twintig beelden. Hieruit blijft al snel dat de resultaten zeer variabel zijn.
+Appendix \ref{appendix:comparison} toont alle vergelijkende maskers voor de eerste twintig beelden. Hieruit blijkt al snel dat de resultaten zeer variabel zijn.
 
 \begin{figure}
   \centering
@@ -554,9 +554,9 @@ Ook de grote overlappen in mogelijkheden tussen de verschillende bibliotheken zo
 
 \appendix
 
-\section*{Voorbereidende stappen}
+\section{Voorbereidende stappen}
 
-\subsection*{Voorbereide originele beelden}
+\subsection{Voorbereide originele beelden}
 \label{appendix:prepared-originals}
 
 \begin{figure}[H]
@@ -566,7 +566,7 @@ Ook de grote overlappen in mogelijkheden tussen de verschillende bibliotheken zo
 \label{fig:prepared-originals}
 \end{figure}
 
-\subsection*{Originele histogrammen}
+\subsection{Originele histogrammen}
 \label{appendix:cropped-histograms}
 
 \begin{figure}[H]
@@ -576,7 +576,7 @@ Ook de grote overlappen in mogelijkheden tussen de verschillende bibliotheken zo
 \label{fig:cropped-histograms}
 \end{figure}
 
-\subsection*{Sigmoids}
+\subsection{Sigmoids}
 \label{appendix:sigmoids}
 
 \begin{figure}[H]
@@ -586,7 +586,7 @@ Ook de grote overlappen in mogelijkheden tussen de verschillende bibliotheken zo
 \label{fig:sigmoids}
 \end{figure}
 
-\subsection*{Histogrammen na contrast stretching}
+\subsection{Histogrammen na contrast stretching}
 \label{appendix:enhanced-histograms}
 
 \begin{figure}[H]
@@ -596,10 +596,10 @@ Ook de grote overlappen in mogelijkheden tussen de verschillende bibliotheken zo
 \label{fig:enhanced-histograms}
 \end{figure}
 
-\section*{Boven- en onder kaak-splitsing}
+\section{Boven- en onder kaak-splitsing}
 \label{appendix:jaw-splits}
 
-\subsection*{Splitsingen}
+\subsection{Splitsingen}
 
 \begin{figure}[H]
 \centering
@@ -608,7 +608,7 @@ Ook de grote overlappen in mogelijkheden tussen de verschillende bibliotheken zo
 \label{fig:jaw-splits}
 \end{figure}
 
-\subsection*{Histogrammen}
+\subsection{Histogrammen}
 
 \begin{figure}[H]
 \centering
@@ -617,11 +617,10 @@ Ook de grote overlappen in mogelijkheden tussen de verschillende bibliotheken zo
 \label{fig:jaw-splits-hists}
 \end{figure}
 
-
-\section*{Individuele snijtand segmentatie}
+\section{Individuele snijtand segmentatie}
 \label{appendix:teeth-segmentation}
 
-\subsection*{Splitsingen}
+\subsection{Splitsingen}
 \label{appendix:teeth-isolation}
 
 \begin{figure}[H]
@@ -631,7 +630,7 @@ Ook de grote overlappen in mogelijkheden tussen de verschillende bibliotheken zo
 \label{fig:teeth-isolation}
 \end{figure}
 
-\subsection*{Histogrammen}
+\subsection{Histogrammen}
 \label{appendix:teeth-isolation-hists}
 
 \begin{figure}[H]
@@ -641,7 +640,7 @@ Ook de grote overlappen in mogelijkheden tussen de verschillende bibliotheken zo
 \label{fig:teeth-isolation-hists}
 \end{figure}
 
-\subsection*{ROI's}
+\subsection{ROI's}
 \label{appendix:rois}
 
 \begin{figure}[H]
@@ -651,10 +650,10 @@ Ook de grote overlappen in mogelijkheden tussen de verschillende bibliotheken zo
 \label{fig:rois}
 \end{figure}
 
-\section*{Resulterende contouren en maskers}
+\section{Resulterende contouren en maskers}
 \label{appendix:contours}
 
-\subsection*{Gedetecteerde contouren}
+\subsection{Gedetecteerde contouren}
 
 \begin{figure}[H]
 \centering
@@ -663,7 +662,7 @@ Ook de grote overlappen in mogelijkheden tussen de verschillende bibliotheken zo
 \label{fig:contours}
 \end{figure}
 
-\subsection*{Kroon Histogrammen}
+\subsection{Kroon Histogrammen}
 \label{appendix:crown_histograms}
 
 \begin{figure}[H]
@@ -680,8 +679,7 @@ Ook de grote overlappen in mogelijkheden tussen de verschillende bibliotheken zo
 \label{fig:crown_histograms-1}
 \end{figure}
 
-
-\subsection*{Zachte contouren}
+\subsection{Zachte contouren}
 
 \begin{figure}[H]
 \centering
@@ -690,7 +688,7 @@ Ook de grote overlappen in mogelijkheden tussen de verschillende bibliotheken zo
 \label{fig:masks}
 \end{figure}
 
-\subsection*{Vergelijking met verwachte resultaat}
+\subsection{Vergelijking met verwachte resultaat}
 \label{appendix:comparison}
 
 \begin{figure}[H]
@@ -706,6 +704,5 @@ Ook de grote overlappen in mogelijkheden tussen de verschillende bibliotheken zo
 \caption{Vergelijking sets 11 tot 20}
 \label{fig:comparison-1}
 \end{figure}
-
 
 \end{document}
