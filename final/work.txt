@@ -103,9 +103,13 @@
 - report: ui (15min)
 - report: results and conclusions (30min)
 
-26/6 =
-- report: proofreading and fixes ()
+26/6 = 3h
+- report: proofreading and fixes (3h)
+
+27/6 = 3h
+- presentation (2h)
+- presentation fixes (1h)
 
 ---
-total = 95h30min
----
+
+total = 101h30min
