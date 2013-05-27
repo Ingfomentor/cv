@@ -32,32 +32,47 @@ def smooth_contours(contours):
 
 def smooth_contour(contour):
   
-  image = np.zeros([500,500,3], np.float32)
+  image = np.zeros([400,300,3], np.float32)
+  
+  contour = contour + [100, 0]
   
   # draw the contour
   cv2.drawContours(image, [contour],  0, [255,255,255], 1)
+
+  # cv2.imshow('contour', image)
 
   # dilate
   kernel = cv2.getStructuringElement(cv2.MORPH_CROSS, (17,17))
   dilated = cv2.dilate(image, kernel)
   
+  # cv2.imshow('dilated', dilated)
+  
   # erode
   kernel = cv2.getStructuringElement(cv2.MORPH_CROSS, (9,9))
   eroded = cv2.erode(dilated, kernel)
 
+  # cv2.imshow('eroded', eroded)
+
   # blur
   blurred = cv2.blur(eroded, (13 , 13))
+  
+  # cv2.imshow('blurred', blurred)
 
   # find contours of dilated+eroded+blurred image
-  image2 = np.zeros([500,500,3])
+  image2 = np.zeros([400,300,3])
   gray   = np.uint8(cv2.cvtColor(blurred, cv2.COLOR_BGR2GRAY))
 
   _, thresh = cv2.threshold(gray, 127, 255, 0)
   contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_L1)
 
-  assert len(contours) == 1
+  assert len(contours) >= 1
 
-  return contours[0]
+  # mask = np.zeros([400,300,3], np.float32)
+  # cv2.drawContours(mask, [contours[0]],  0, [255,255,255], 1)
+  # cv2.imshow('mask', mask)
+  # cv2.waitKey(0)
+
+  return contours[0] - [100,0]
 
 def show(image, rois, contours):
   '''
