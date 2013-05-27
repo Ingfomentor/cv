@@ -18,7 +18,7 @@ SRC_DIR=src
 SRCS=${SRC_DIR}
 REPORT_DIR=report
 REPORT=${REPORT_DIR}/report.pdf
-DIST_CONTENT=Makefile README ${SRCS}
+DIST_CONTENT=Makefile README ${SRCS} ${REPORT}
 
 PYTHON=/opt/local/bin/python -Wi
 DIST_DIR=dist
@@ -218,7 +218,6 @@ clean:
 mrproper: clean
 	@${RM} *.mat
 	@${RM} ${SRC_DIR}/*.pyc
-	@${RM} verslag/verslag.pdf
 	@${RM} dist
 
 .PRECIOUS: %_hist.mat %_hist.eps %_enh.mat %_jaw_split.mat %_teeth_iso.mat %_roi.mat %_contours.mat %_masks.mat
